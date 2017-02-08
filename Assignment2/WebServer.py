@@ -32,14 +32,16 @@ File not found
 
 if __name__ == "__main__":
 	thread_pool = ThreadPool(4)
+	thread_pool.start()
 	while True:
 		try:
 			conn, addr = sock.accept()
 			message = conn.recv(1024)
-			file_name = get_file_name_from_header(message)			
-			task(conn, file_name)
+			file_name = get_file_name_from_header(message)
+			thread_pool.submit_task(task, {'connection':conn,'file_name':file_name})		
 			conn.close()
 		except KeyboardInterrupt:
+			thread_pool.close()
 			raise		  
 		finally:
 			print "done"

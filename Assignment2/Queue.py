@@ -1,3 +1,4 @@
+#Simple Queue object that I wanted to do myself for gees.
 class Queue (object):
 	head_node = None
 	end_node = None	
