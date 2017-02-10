@@ -7,7 +7,7 @@ class ThreadPool (object):
 	pool = list()
 	_queue = Queue()
 	exit = False
-		
+
 	def __init__(self, pool_size):
 		self.pool_size = pool_size
 
@@ -19,35 +19,35 @@ class ThreadPool (object):
 				print self.pool[i]
 				self.pool[i].daemon = True
 				self.pool[i].start()
-				
+
 	def poll_queue(self):
 		while not self.exit:
-			#use threading events rather. this is kak.			
+			#use threading events rather. this is kak.
 			if not self._queue.is_empty():
 				print threading.current_thread(), "picked up queue"
 				task_obj = self._queue.pop().value
-				
-				if task_obj not None:
+
+				if task_obj is not None:
 					task = task_obj.task
-					kwargs = task_obj.kwargs								
+					kwargs = task_obj.kwargs
 					task(kwargs.get('connection'), kwargs.get('file_name'))
 			else:
 				time.sleep(1)
-	
+
 	def close(self):
 			self.exit=True
-		
+
 	def submit_task(self, task, kwargs):
 		print kwargs
 		task_obj = TaskObj(task, kwargs)
 		self._queue.add(task_obj)
-		
+
 	def is_empty(self):
 		return self._queue.is_empty()
 
 
 
-	
+
 class MyThread(threading.Thread):
 	def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, verbose=None):
 		super(MyThread, self).__init__(group=group, target=target, name=name, kwargs=kwargs, verbose=verbose)
@@ -62,6 +62,3 @@ class TaskObj(object):
 	def __init__(self, task, kwargs):
 		self.task = task
 		self.kwargs = kwargs
-
-	
-	
