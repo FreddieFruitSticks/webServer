@@ -24,7 +24,6 @@ if __name__ == "__main__":
 			message = conn.recv(1024)
 			file_name = get_file_name_from_header(message)
 			thread_pool.submit_task(task, {'connection':conn,'file_name':file_name})
-			conn.close()
 		except KeyboardInterrupt:
 			thread_pool.close()
 			raise

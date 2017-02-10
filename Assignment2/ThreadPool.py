@@ -25,12 +25,14 @@ class ThreadPool (object):
 			#use threading events rather. this is kak.
 			if not self._queue.is_empty():
 				print threading.current_thread(), "picked up queue"
-				task_obj = self._queue.pop().value
-
-				if task_obj is not None:
-					task = task_obj.task
-					kwargs = task_obj.kwargs
-					task(kwargs.get('connection'), kwargs.get('file_name'))
+				task = self._queue.pop()
+				if task is not None:
+					task_obj = task.value
+					if task_obj is not None:
+						print threading.current_thread(),' picked up task'
+						task = task_obj.task
+						kwargs = task_obj.kwargs
+						task(kwargs.get('connection'), kwargs.get('file_name'))
 			else:
 				time.sleep(1)
 

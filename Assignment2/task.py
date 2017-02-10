@@ -3,7 +3,7 @@ def task(connection, file_name):
 		my_file = open(file_name)
 		l = my_file.read(100)
 		while l:
-			conn.send(l)
+			connection.send(l)
 			l = my_file.read(1024)
 
 		my_file.close()
@@ -11,5 +11,7 @@ def task(connection, file_name):
 		response = """
 File not found
 		"""
-		conn.send(response)
+		connection.send(response)
 		print 'error'
+	finally:
+		connection.close()
