@@ -17,27 +17,20 @@ class ThreadPool (object):
 	def submit_task(self, task, kwargs):
 		task_obj = TaskObj(task, kwargs)
 		# thread = self._thread_queue.pop().value
+		print task_obj.task
 		thread = MyThread(target=task_obj.task, kwargs=task_obj.kwargs)
 		# thread.set_target(task_obj.task, task_obj.kwargs)
-		print thread.__target
-		print thread.__kwargs
 		thread.start()
 
 	def is_empty(self):
 		return self._task_queue.is_empty()
 
-
-
 class MyThread(threading.Thread):
 	def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, verbose=None):
 		super(MyThread, self).__init__(group=group, target=target, name=name, kwargs=kwargs, verbose=verbose)
 
-	def set_target(self, target, kwargs):
-		self._target = target
-		self._kwargs = kwargs
-	#
-	# def run(self):
-	# 	super(MyThread, self).run()
+	def run(self):
+		super(MyThread, self).run()
 
 
 # POPO

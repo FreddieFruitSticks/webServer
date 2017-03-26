@@ -1,6 +1,6 @@
 import socket
 from ThreadPool import ThreadPool
-from task import task
+from tasks import task_get_file
 
 HOST = ''
 PORT=50009
@@ -21,9 +21,10 @@ if __name__ == "__main__":
 	while True:
 		try:
 			conn, addr = sock.accept()
+			print "accepting connection"
 			message = conn.recv(1024)
 			file_name = get_file_name_from_header(message)
-			thread_pool.submit_task(task, {'connection':conn,'file_name':file_name})
+			thread_pool.submit_task(task_get_file, {'connection':conn,'file_name':file_name})
 		except KeyboardInterrupt:
 			raise
 		except Exception:
