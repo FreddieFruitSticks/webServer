@@ -1,37 +1,30 @@
+from datetime import datetime
+import os
+from email.utils import formatdate
 
-def task_get_file(connection, file_name):
-	response = """
-	HTTP/1.1 200 OK
-	Date: Mon, 27 Jul 2017 12:28:53 GMT
-	Server: FreddiesServer
-	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT
-	Content-Length: 88
-	Content-Type: text/html
-	Connection: Closed
+def task_get_file(connection, file_name, user_agent):
+	response ="""
+HTTP/1.1 200 OK\r\nDate: {}\nServer: FreddiesServer/0.0.1\nUser-Agent: {}\nContent-length:{}\nContent-Type:text/html; charset=utf-8
 
-{}
-	"""
+{}"""
 	try:
 		my_file = open(file_name)
-		l = my_file.read(100)
+		l = my_file.read(10)
+		connection.send(response.format(
+						formatdate(timeval=None, localtime=False, usegmt=True),
+						user_agent,
+						os.path.getsize(os.getcwd()+"/"+file_name),
+						l))
 		while l:
-			connection.send(response.format(l))
-			l = my_file.read(1024)
+			l = my_file.read(10)
+			connection.send(l)
+		my_file.close()
 	except IOError:
-		response = """
-HTTP/1.1 200 OK
-Date: Mon, 27 Jul 2017 12:28:53 GMT
-Server: FreddiesServer
-Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT
-Content-Length: 88
-Content-Type: text/html
-Connection: Closed
-
+		message = """
 <html><body><h1>File Not Found</h1></body></html>
 """
-		connection.send(response)
+		connection.send(response.format(message))
 		print 'error'
 	finally:
-		my_file.close()
 		connection.close()
 		print 'finished task_get_file'
