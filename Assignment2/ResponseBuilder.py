@@ -1,40 +1,43 @@
 class ResponseBuilder(object):
+    response_data = {}
+
     response_header = """
-HTTP/1.1 `{status}` `{status_en}`\r\nDate: `{date}`\nServer: FreddiesServer/0.0.1\nUser-Agent: '{user_agent}'\nContent-length:'{content_length}'\nContent-Type:text/html; charset=utf-8
+HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {user_agent}\nContent-length:{content_length}\nContent-Type:{content_type}
 
-'{body}'"""
-
-    response = """
-HTTP/1.1"""
+{body}"""
 
     def with_status(self, status):
-        self.response += " " + status
+        self.response_data.update({"status": status})
         return self
 
     def with_status_en(self, status_en):
-        self.response += " " + status_en + '\r\n'
+        self.response_data.update({"status_en": status_en})
         return self
 
     def with_date(self, date):
-        self.response += "Date: " + date + '\r\n'
+        self.response_data.update({"date": date})
         return self
 
     def with_server(self, server):
-        self.response += "Server: " + server + '\r\n'
+        self.response_data.update({"server": server})
         return self
 
     def with_user_agent(self, user_agent):
-        self.response += "Server: " + user_agent + '\r\n'
+        self.response_data.update({"user_agent": user_agent})
         return self
 
     def with_content_type(self, type):
-        self.response += "Content-Type: " + type + '\r\n'
+        self.response_data.update({"content_type": type})
+        return self
+
+    def with_content_length(self, length):
+        self.response_data.update({"content_length": length})
         return self
 
     def with_body(self, body):
-        self.response += "Content-length: " + len(body) + '\r\n\r\n'
-        self.response += body
+        self.response_data.update({"body": body})
         return self
 
     def build(self):
-        return self.response
+        return self.response_header.format(**self.response_data)
+
