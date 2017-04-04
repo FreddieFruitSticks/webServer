@@ -4,7 +4,7 @@ from ResponseBuilder import ResponseBuilder
 
 
 # Each task must close it's own connection
-def task_get_file(connection, file_name, user_agent):
+def task_get_file(connection, file_name, user_agent, head_request):
     response_builder = ResponseBuilder()
     response_builder.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
         .with_content_type("text/html; charset=utf-8") \
@@ -14,13 +14,16 @@ def task_get_file(connection, file_name, user_agent):
     try:
         file_path = os.getcwd() + "/text_files/" + file_name
         my_file = open(file_path)
-        l = my_file.read(10)
+        if not head_request:
+            l = my_file.read(10)
+        else:
+            l = None
         response_builder.with_body(l) \
             .with_status(200) \
             .with_content_length(os.path.getsize(file_path)) \
             .with_status_en("OK")
         connection.send(response_builder.build())
-        while l:
+        while l and not head_request:
             l = my_file.read(10)
             connection.send(l)
         my_file.close()

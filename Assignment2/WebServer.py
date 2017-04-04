@@ -1,7 +1,7 @@
 import socket
 from ThreadPool import ThreadPool
 from tasks import task_get_file
-from HttpMessageVerifier import verify_message
+from HttpMessageVerifier import get_operation
 from NetworkExceptions import BadRequestException
 from ResponseBuilder import build_error_response
 
@@ -14,11 +14,24 @@ sock.bind((HOST, PORT))
 sock.listen(1)
 
 
-def get_file_name_from_header(message):
-    verify_message(message)
-    request_data = message.split("\n")
-    request_header = request_data[0]
-    return request_header.split(" ")[1].split("/")[1]
+def handle_request(message, conn, thread_pool):
+    try:
+        request_operation = get_operation(message)
+        request_data = message.split("\n")
+        request_header = request_data[0]
+        file_name = request_header.split(" ")[1].split("/")[1]
+        if request_operation == 'GET' or request_operation == 'HEAD':
+            head_req = False if request_operation == 'GET' else True
+            thread_pool.submit_task(task_get_file, {
+                'connection': conn,
+                'file_name': file_name,
+                'user_agent': user_agent,
+                'head_request': head_req
+            })
+    except BadRequestException as e:
+        response_builder = build_error_response(400, e, user_agent)
+        conn.send(response_builder.build())
+        conn.close()
 
 
 if __name__ == "__main__":
@@ -30,16 +43,7 @@ if __name__ == "__main__":
             conn, addr = sock.accept()
             message = conn.recv(1024)
             try:
-                file_name = get_file_name_from_header(message)
-                thread_pool.submit_task(task_get_file, {
-                    'connection': conn,
-                    'file_name': file_name,
-                    'user_agent': user_agent
-                })
-            except BadRequestException as e:
-                response_builder = build_error_response(400, e, user_agent)
-                conn.send(response_builder.build())
-                conn.close()
+                handle_request(message, conn, thread_pool)
             except Exception:
                 response_builder = build_error_response(500, "Internal server error", user_agent)
                 conn.send(response_builder.build())
