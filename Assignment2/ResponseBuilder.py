@@ -1,8 +1,11 @@
+from email.utils import formatdate
+
+
 class ResponseBuilder(object):
     response_data = {}
 
     response_header = """
-HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {user_agent}\nContent-length:{content_length}\nContent-Type:{content_type}
+HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {user_agent}\nContent-length:{content_length}\nContent-Type:{content_type}\n
 
 {body}"""
 
@@ -41,3 +44,15 @@ HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {us
     def build(self):
         return self.response_header.format(**self.response_data)
 
+
+def build_error_response(code, message, agent):
+    response = ResponseBuilder()
+    response.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
+        .with_status(code) \
+        .with_status_en(message) \
+        .with_content_type("text/html; charset=utf-8") \
+        .with_server("FredServer") \
+        .with_content_length(0) \
+        .with_user_agent(agent) \
+        .with_body(None)
+    return response

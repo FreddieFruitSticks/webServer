@@ -1,8 +1,8 @@
 from Queue import Queue
-import threading, time
+import threading
+from ResponseBuilder import build_error_response
 
 
-# Thread pool, polling the queue for tasks to run.
 class ThreadPool(object):
     pool_size = 10
     _thread_queue = Queue()
@@ -18,10 +18,19 @@ class ThreadPool(object):
     def submit_task(self, task, kwargs):
         task_obj = TaskObj(task, kwargs)
         # thread = self._thread_queue.pop().value
-        print task_obj.task
-        thread = MyThread(target=task_obj.task, kwargs=task_obj.kwargs)
-        # thread.set_target(task_obj.task, task_obj.kwargs)
-        thread.start()
+        try:
+            thread = MyThread(target=task_obj.task, kwargs=task_obj.kwargs)
+            # thread.set_target(task_obj.task, task_obj.kwargs)
+            thread.start()
+        except threading.ThreadError as e:
+            conn = kwargs.get('connection', None)
+            user_agent = kwargs.get('user_agent', None)
+            if conn is not None:
+                response_builder = build_error_response(500, "Internal server error", user_agent)
+                conn.send(response_builder.build())
+                print e
+            else:
+                raise e
 
     def is_empty(self):
         return self._task_queue.is_empty()

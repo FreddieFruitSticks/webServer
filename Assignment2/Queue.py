@@ -4,7 +4,7 @@ class Queue(object):
     end_node = None
 
     def is_empty(self):
-        return self.head_node == None and self.end_node == None
+        return self.head_node is None and self.end_node is None
 
     def add(self, a_node_value):
         node = self.Node(a_node_value)
