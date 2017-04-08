@@ -1,9 +1,9 @@
 import socket
 from ThreadPool import ThreadPool
-from tasks import task_get_file
+from tasks import task_handle_get, task_handle_post_request
 from HttpMessageVerifier import get_operation
 from NetworkExceptions import BadRequestException
-from ResponseBuilder import build_error_response
+from ResponseBuilder import build_generic_response
 
 HOST = ''
 PORT = 50008
@@ -22,16 +22,28 @@ def handle_request(message, conn, thread_pool):
         file_name = request_header.split(" ")[1].split("/")[1]
         if request_operation == 'GET' or request_operation == 'HEAD':
             head_req = False if request_operation == 'GET' else True
-            thread_pool.submit_task(task_get_file, {
+            thread_pool.submit_task(task_handle_get, {
                 'connection': conn,
                 'file_name': file_name,
                 'user_agent': user_agent,
                 'head_request': head_req
             })
+        elif request_operation == 'POST':
+            message_body = get_message_body(message)
+            thread_pool.submit_task(task_handle_post_request, {
+                'message_body': message_body,
+                'connection': conn
+            })
     except BadRequestException as e:
-        response_builder = build_error_response(400, e, user_agent)
+        response_builder = build_generic_response(400, e, user_agent)
         conn.send(response_builder.build())
         conn.close()
+
+
+def get_message_body(message):
+    broken_up = message.split('\r\n')
+    length = len(broken_up)
+    return broken_up[length - 1]
 
 
 if __name__ == "__main__":
@@ -45,10 +57,10 @@ if __name__ == "__main__":
             try:
                 handle_request(message, conn, thread_pool)
             except Exception:
-                response_builder = build_error_response(500, "Internal server error", user_agent)
+                response_builder = build_generic_response(500, "Internal server error", user_agent)
                 conn.send(response_builder.build())
                 conn.close()
         except KeyboardInterrupt:
             raise
         finally:
-            print "done"
+            pass

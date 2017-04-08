@@ -45,7 +45,7 @@ HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {us
         return self.response_header.format(**self.response_data)
 
 
-def build_error_response(code, message, agent):
+def build_generic_response(code, message, agent):
     response = ResponseBuilder()
     response.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
         .with_status(code) \

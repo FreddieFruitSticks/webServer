@@ -1,6 +1,6 @@
 from Queue import Queue
 import threading
-from ResponseBuilder import build_error_response
+from ResponseBuilder import build_generic_response
 
 
 class ThreadPool(object):
@@ -26,10 +26,11 @@ class ThreadPool(object):
             conn = kwargs.get('connection', None)
             user_agent = kwargs.get('user_agent', None)
             if conn is not None:
-                response_builder = build_error_response(500, "Internal server error", user_agent)
+                response_builder = build_generic_response(500, "Internal server error", user_agent)
                 conn.send(response_builder.build())
                 print e
             else:
+                print "no connection object - something went seriously wrong"
                 raise e
 
     def is_empty(self):

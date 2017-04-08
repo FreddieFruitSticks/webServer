@@ -1,10 +1,10 @@
-import os
+import os, json
 from email.utils import formatdate
-from ResponseBuilder import ResponseBuilder
+from ResponseBuilder import ResponseBuilder, build_generic_response
 
 
 # Each task must close it's own connection
-def task_get_file(connection, file_name, user_agent, head_request):
+def task_handle_get(connection, file_name, user_agent, head_request):
     response_builder = ResponseBuilder()
     response_builder.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
         .with_content_type("text/html; charset=utf-8") \
@@ -37,5 +37,14 @@ def task_get_file(connection, file_name, user_agent, head_request):
             .with_content_length(0)
 
         connection.send(response_builder.build())
+    finally:
+        connection.close()
+
+
+def task_handle_post_request(connection, message_body):
+    body = json.loads(message_body)
+    response = build_generic_response(200, "OK", None).build()
+    try:
+        connection.send(response)
     finally:
         connection.close()
