@@ -4,6 +4,8 @@ from ResponseBuilder import ResponseBuilder, build_generic_response
 
 
 # Each task must close it's own connection
+
+# handles HEAD request too since HEAD = GET without a body
 def task_handle_get(connection, file_name, user_agent, head_request):
     response_builder = ResponseBuilder()
     response_builder.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
@@ -42,9 +44,14 @@ def task_handle_get(connection, file_name, user_agent, head_request):
 
 
 def task_handle_post_request(connection, message_body):
-    body = json.loads(message_body)
-    response = build_generic_response(200, "OK", None).build()
+    message = do_something(message_body)
+    print message
+    response = build_generic_response(200, "OK", None).with_body(message).with_content_length(len(message)+1).build()
     try:
         connection.send(response)
     finally:
         connection.close()
+
+
+def do_something(message_body):
+    return message_body
