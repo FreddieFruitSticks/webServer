@@ -101,13 +101,17 @@ def task_handle_delete_request(connection, headers):
         connection.close()
 
 
+# TODO: Move these in to another file - this is where the WSGI API will be handled
 def do_something_delete(headers):
-    file_path = os.getcwd() + "/text_files/" + headers['file_name']
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        response = build_generic_response(200, "OK", None).build()
+    if 'file_name' in headers:
+        file_path = os.getcwd() + "/text_files/" + headers['file_name']
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            response = build_generic_response(200, "OK", None).build()
+        else:
+            response = build_generic_response(404, "Not Found", None).build()
     else:
-        response = build_generic_response(404, "Not Found", None).build()
+        response = build_generic_response(400, "Bad Request", None).build()
 
     return response
 

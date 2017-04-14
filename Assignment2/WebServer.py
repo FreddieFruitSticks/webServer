@@ -14,6 +14,7 @@ sock.bind((HOST, PORT))
 sock.listen(1)
 
 
+# TODO: Think about putting this in the thread that it calls.
 def handle_request(message, conn, thread_pool):
     try:
         headers = parse_headers(message)
