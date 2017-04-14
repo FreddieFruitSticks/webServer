@@ -63,7 +63,8 @@ def task_handle_post_request(connection, message_body, headers):
             response = build_generic_response(417, "Expectation Failed", None).build()
     else:
         message = do_something_post(message_body)
-        response = build_generic_response(200, "OK", None).with_body(message) \
+        response = build_generic_response(200, "OK", None)\
+            .with_body(message) \
             .with_content_length(len(message) + 1) \
             .build()
     try:

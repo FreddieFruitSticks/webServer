@@ -2,7 +2,7 @@ import socket
 from ThreadPool import ThreadPool
 from tasks import task_handle_get, task_handle_post_request, task_handle_put_request, task_handle_delete_request
 from HttpMessageVerifier import parse_headers
-from NetworkExceptions import BadRequestException
+from NetworkExceptions import BadRequestException, HttpVersionException
 from ResponseBuilder import build_generic_response
 
 HOST = ''
@@ -52,6 +52,10 @@ def handle_request(message, conn, thread_pool):
                 'connection': conn,
                 'headers': headers
             })
+    except HttpVersionException as e:
+        response_builder = build_generic_response(505, e, user_agent)
+        conn.send(response_builder.build())
+        conn.close()
     except BadRequestException as e:
         response_builder = build_generic_response(400, e, user_agent)
         conn.send(response_builder.build())

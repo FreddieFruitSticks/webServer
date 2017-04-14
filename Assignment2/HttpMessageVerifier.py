@@ -1,4 +1,4 @@
-from NetworkExceptions import BadRequestException
+from NetworkExceptions import BadRequestException, HttpVersionException
 
 supported_operations = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD']
 
@@ -25,6 +25,8 @@ def parse_headers(message):
     if request_header_operation in supported_operations and protocol_name == 'HTTP' \
             and protocol_version == '1.1':
         return headers_as_dict
+    elif protocol_version != '1.1':
+        raise HttpVersionException("HTTP Version Not Supported")
     else:
         print "operation not allowed", request_header_operation
         raise BadRequestException("Bad Request. " + request_header)
