@@ -1,7 +1,7 @@
 import socket
 from ThreadPool import ThreadPool
-from tasks import task_handle_get, task_handle_post_request
-from HttpMessageVerifier import get_operation
+from tasks import task_handle_get, task_handle_post_request, task_handle_put_request
+from HttpMessageVerifier import parse_headers
 from NetworkExceptions import BadRequestException
 from ResponseBuilder import build_generic_response
 
@@ -16,10 +16,15 @@ sock.listen(1)
 
 def handle_request(message, conn, thread_pool):
     try:
-        request_operation = get_operation(message)
-        request_data = message.split("\n")
-        request_header = request_data[0]
-        file_name = request_header.split(" ")[1].split("/")[1]
+        headers = parse_headers(message)
+        request_operation = headers['request_operation']
+        file_name = ''
+        message_body = get_message_body(message)
+
+        try:
+            file_name = headers['file_name']
+        except KeyError as e:
+            print "file_name not a header ", e
         if request_operation == 'GET' or request_operation == 'HEAD':
             head_req = False if request_operation == 'GET' else True
             thread_pool.submit_task(task_handle_get, {
@@ -32,7 +37,19 @@ def handle_request(message, conn, thread_pool):
             message_body = get_message_body(message)
             thread_pool.submit_task(task_handle_post_request, {
                 'message_body': message_body,
-                'connection': conn
+                'connection': conn,
+                'headers': headers
+            })
+        elif request_operation == 'PUT':
+            thread_pool.submit_task(task_handle_put_request, {
+                'message_body': message_body,
+                'connection': conn,
+                'headers': headers
+            })
+        elif request_operation == 'DELETE':
+            thread_pool.submit_task(task_handle_put_request, {
+                'connection': conn,
+                'headers': headers
             })
     except BadRequestException as e:
         response_builder = build_generic_response(400, e, user_agent)
@@ -42,8 +59,7 @@ def handle_request(message, conn, thread_pool):
 
 def get_message_body(message):
     broken_up = message.split('\r\n')
-    length = len(broken_up)
-    return broken_up[length - 1]
+    return broken_up[len(broken_up) - 1]
 
 
 if __name__ == "__main__":
@@ -56,10 +72,11 @@ if __name__ == "__main__":
             message = conn.recv(1024)
             try:
                 handle_request(message, conn, thread_pool)
-            except Exception:
+            except Exception as e:
                 response_builder = build_generic_response(500, "Internal server error", user_agent)
                 conn.send(response_builder.build())
                 conn.close()
+                print e
         except KeyboardInterrupt:
             raise
         finally:
