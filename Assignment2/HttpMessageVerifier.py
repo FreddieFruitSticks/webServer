@@ -24,10 +24,9 @@ def parse_headers(message):
 
     if request_header_operation in supported_operations and protocol_name == 'HTTP' \
             and protocol_version == '1.1':
-        print "operation is allowed", request_header_operation
         return headers_as_dict
     else:
-        print "bad request - message not verified"
+        print "operation not allowed", request_header_operation
         raise BadRequestException("Bad Request. " + request_header)
 
 

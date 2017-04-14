@@ -1,6 +1,6 @@
 import socket
 from ThreadPool import ThreadPool
-from tasks import task_handle_get, task_handle_post_request, task_handle_put_request
+from tasks import task_handle_get, task_handle_post_request, task_handle_put_request, task_handle_delete_request
 from HttpMessageVerifier import parse_headers
 from NetworkExceptions import BadRequestException
 from ResponseBuilder import build_generic_response
@@ -47,7 +47,7 @@ def handle_request(message, conn, thread_pool):
                 'headers': headers
             })
         elif request_operation == 'DELETE':
-            thread_pool.submit_task(task_handle_put_request, {
+            thread_pool.submit_task(task_handle_delete_request, {
                 'connection': conn,
                 'headers': headers
             })
