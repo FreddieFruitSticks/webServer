@@ -76,18 +76,25 @@ def task_handle_post_request(connection, message_body, headers):
 
 def task_handle_put_request(connection, message_body, headers):
     file_path = os.getcwd() + "/text_files/" + headers['file_name']
-    if os.path.exists(file_path):
-        my_file = open(file_path, 'w')
-        if len(message_body) > 0:
-            my_file.write(message_body)
-            response = build_generic_response(200, "OK", None).build()
-        else:
-            response = build_generic_response(204, "No Content", None).build()
-
+    if 'Content-MD5' in headers:
+        response = build_generic_response(501, "Not Implemented", None).build()
+    elif 'Content-Length' not in headers or len(message_body) != headers.get('Content-Length'):
+        response = build_generic_response(400, "Bad Request", None).build()
+    elif 'Content-Type' not in headers:
+        response = build_generic_response(400, "Bad Request", None).build()
     else:
-        my_file = open(file_path, 'w+')
-        my_file.write(message_body)
-        response = build_generic_response(201, "Created", None).build()
+
+        if os.path.exists(file_path):
+            my_file = open(file_path, 'w')
+            if len(message_body) > 0:
+                my_file.write(message_body)
+                response = build_generic_response(200, "OK", None).build()
+            else:
+                response = build_generic_response(204, "No Content", None).build()
+        else:
+            my_file = open(file_path, 'w+')
+            my_file.write(message_body)
+            response = build_generic_response(201, "Created", None).build()
 
     try:
         connection.send(response)
