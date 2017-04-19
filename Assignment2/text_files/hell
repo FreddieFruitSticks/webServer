@@ -1,0 +1,7 @@
+{
+	"testkey":"testvalue",
+	"testkey2": {
+		"testkey3":"testvalue3",
+		"testkey4":"testvalue4"
+	}
+}

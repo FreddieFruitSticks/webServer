@@ -19,19 +19,13 @@ def handle_request(message, conn, thread_pool):
     try:
         headers = parse_headers(message)
         request_operation = headers['request_operation']
-        file_name = ''
         message_body = get_message_body(message)
 
-        try:
-            file_name = headers['file_name']
-        except KeyError as e:
-            print "file_name not a header ", e
         if request_operation == 'GET' or request_operation == 'HEAD':
             head_req = False if request_operation == 'GET' else True
             thread_pool.submit_task(task_handle_get, {
                 'connection': conn,
-                'file_name': file_name,
-                'user_agent': user_agent,
+                'headers': headers,
                 'head_request': head_req
             })
         elif request_operation == 'POST':
@@ -53,11 +47,11 @@ def handle_request(message, conn, thread_pool):
                 'headers': headers
             })
     except HttpVersionException as e:
-        response_builder = build_generic_response(505, e, user_agent)
+        response_builder = build_generic_response(505, e)
         conn.send(response_builder.build())
         conn.close()
     except BadRequestException as e:
-        response_builder = build_generic_response(400, e, user_agent)
+        response_builder = build_generic_response(400, e)
         conn.send(response_builder.build())
         conn.close()
 
@@ -78,7 +72,7 @@ if __name__ == "__main__":
             try:
                 handle_request(message, conn, thread_pool)
             except Exception as e:
-                response_builder = build_generic_response(500, "Internal server error", user_agent)
+                response_builder = build_generic_response(500, "Internal server error")
                 conn.send(response_builder.build())
                 conn.close()
                 print e

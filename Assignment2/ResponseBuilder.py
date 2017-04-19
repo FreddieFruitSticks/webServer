@@ -5,7 +5,7 @@ class ResponseBuilder(object):
     response_data = {}
 
     response_header = """
-HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {user_agent}\nContent-length:{content_length}\nContent-Type:{content_type}\n
+HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nContent-length:{content_length}\nContent-Type:{content_type}\n
 
 {body}"""
 
@@ -25,10 +25,6 @@ HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {us
         self.response_data.update({"server": server})
         return self
 
-    def with_user_agent(self, user_agent):
-        self.response_data.update({"user_agent": user_agent})
-        return self
-
     def with_content_type(self, type):
         self.response_data.update({"content_type": type})
         return self
@@ -45,7 +41,7 @@ HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nUser-Agent: {us
         return self.response_header.format(**self.response_data)
 
 
-def build_generic_response(code, message, agent):
+def build_generic_response(code, message):
     response = ResponseBuilder()
     response.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
         .with_status(code) \
@@ -53,6 +49,5 @@ def build_generic_response(code, message, agent):
         .with_content_type("text/html; charset=utf-8") \
         .with_server("FredServer") \
         .with_content_length(0) \
-        .with_user_agent(agent) \
         .with_body(None)
     return response

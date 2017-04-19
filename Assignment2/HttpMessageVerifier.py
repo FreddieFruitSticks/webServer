@@ -23,7 +23,7 @@ def parse_headers(message):
     headers_as_dict['protocol_version'] = protocol_version
 
     if request_header_operation in supported_operations and protocol_name == 'HTTP' \
-            and protocol_version == '1.1':
+            and protocol_version == '1.1' and 'Host' in headers_as_dict:
         return headers_as_dict
     elif protocol_version != '1.1':
         raise HttpVersionException("HTTP Version Not Supported")
