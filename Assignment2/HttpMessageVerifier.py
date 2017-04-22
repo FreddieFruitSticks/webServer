@@ -1,4 +1,5 @@
 from NetworkExceptions import BadRequestException, HttpVersionException
+import os, stat
 
 supported_operations = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD']
 
@@ -6,21 +7,12 @@ supported_operations = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD']
 def parse_headers(message):
     message_split = message.split('\r\n')
     headers_as_dict = parse_headers_to_dict(message_split)
-
     request_header = message_split[0]
     request_header_split = request_header.split(" ")
 
     request_header_operation = request_header_split[0]
-    if len(request_header_split) == 3:
-        request_header_protocol = request_header_split[2]
-        headers_as_dict['file_name'] = request_header_split[1].split("/")[1]
-    else:
-        request_header_protocol = request_header_split[1]
-
-    protocol_name = request_header_protocol.split("/")[0]
-    protocol_version = request_header_protocol.split("/")[1].rstrip()
-    headers_as_dict['request_operation'] = request_header_split[0]
-    headers_as_dict['protocol_version'] = protocol_version
+    protocol_name, protocol_version = parse_request_line(headers_as_dict, request_header_split)
+    verify_access_permissions(headers_as_dict)
 
     if request_header_operation in supported_operations and protocol_name == 'HTTP' \
             and protocol_version == '1.1' and 'Host' in headers_as_dict:
@@ -30,6 +22,24 @@ def parse_headers(message):
     else:
         print "operation not allowed", request_header_operation
         raise BadRequestException("Bad Request. " + request_header)
+
+
+def verify_access_permissions(headers):
+    if ".." in headers.get("file_name"):
+        raise BadRequestException("Bad Request")
+
+
+def parse_request_line(headers_as_dict, request_header_split):
+    if len(request_header_split) == 3:
+        request_header_protocol = request_header_split[2]
+        headers_as_dict['file_name'] = request_header_split[1].split("/")[1]
+    else:
+        request_header_protocol = request_header_split[1]
+    protocol_name = request_header_protocol.split("/")[0]
+    protocol_version = request_header_protocol.split("/")[1].rstrip()
+    headers_as_dict['request_operation'] = request_header_split[0]
+    headers_as_dict['protocol_version'] = protocol_version
+    return protocol_name, protocol_version
 
 
 def parse_headers_to_dict(message_split):

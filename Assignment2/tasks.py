@@ -28,9 +28,6 @@ def task_handle_put_request(connection, message_body, headers):
     if 'Content-MD5' in headers:
         response = build_generic_response(501, "Not Implemented").build()
     elif 'Content-Length' not in headers or len(message_body) != int(headers.get('Content-Length')):
-        print "length"
-        print headers
-        print len(message_body)
         response = build_generic_response(400, "Bad Request").build()
     elif 'Content-Type' not in headers:
         response = build_generic_response(400, "Bad Request").build()
@@ -58,6 +55,10 @@ def task_handle_delete_request(connection, headers):
 def do_something_delete(headers):
     if 'file_name' in headers:
         file_path = os.getcwd() + "/text_files/" + headers['file_name']
+        permissions = os.stat(file_path)
+        permission = int(oct(permissions.st_mode)[-1:])
+        if permission | 2 != permission:
+            return build_generic_response(401, "Unauthorised").build()
         if os.path.exists(file_path):
             os.remove(file_path)
             response = build_generic_response(200, "OK").build()
@@ -76,22 +77,27 @@ def do_something_get(connection, headers, head_request):
         .with_server("FredServer")
     try:
         file_path = os.getcwd() + "/text_files/" + headers['file_name']
-        my_file = open(file_path)
-
-        if not head_request:
-            l = my_file.read(1024)
+        permissions = os.stat(file_path)
+        permission = int(oct(permissions.st_mode)[-1:])
+        if permission | 4 != permission:
+            response = build_generic_response(401, "Unauthorised").build()
+            connection.send(response)
         else:
-            l = None
-        response_builder.with_body(l) \
-            .with_status(200) \
-            .with_content_length(os.path.getsize(file_path)) \
-            .with_status_en("OK")
-        connection.send(response_builder.build())
-        while l and not head_request:
-            l = my_file.read(1024)
-            connection.send(l)
-            print "here1"
-        my_file.close()
+            my_file = open(file_path)
+
+            if not head_request:
+                l = my_file.read(1024)
+            else:
+                l = None
+            response_builder.with_body(l) \
+                .with_status(200) \
+                .with_content_length(os.path.getsize(file_path)) \
+                .with_status_en("OK")
+            connection.send(response_builder.build())
+            while l and not head_request:
+                l = my_file.read(1024)
+                connection.send(l)
+            my_file.close()
     except IOError:
         l = """
 <html><body><h1>File Not Found</h1></body></html>
@@ -129,6 +135,10 @@ def do_something_post(message_body, headers):
 
 def do_something_put(message_body, headers):
     file_path = os.getcwd() + "/text_files/" + headers['file_name']
+    permissions = os.stat(file_path)
+    permission = int(oct(permissions.st_mode)[-1:])
+    if permission | 2 != permission:
+        return build_generic_response(401, "Unauthorised").build()
     if os.path.exists(file_path):
         my_file = open(file_path, 'w')
         if len(message_body) > 0:
