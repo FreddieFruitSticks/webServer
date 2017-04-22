@@ -64,7 +64,6 @@ def get_message_body(message):
 if __name__ == "__main__":
     thread_pool = ThreadPool(4)
     thread_pool.start()
-    user_agent = None
     while True:
         try:
             conn, addr = sock.accept()
