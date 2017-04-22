@@ -28,6 +28,9 @@ def task_handle_put_request(connection, message_body, headers):
     if 'Content-MD5' in headers:
         response = build_generic_response(501, "Not Implemented").build()
     elif 'Content-Length' not in headers or len(message_body) != int(headers.get('Content-Length')):
+        print "length"
+        print headers
+        print len(message_body)
         response = build_generic_response(400, "Bad Request").build()
     elif 'Content-Type' not in headers:
         response = build_generic_response(400, "Bad Request").build()

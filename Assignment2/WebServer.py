@@ -68,9 +68,16 @@ if __name__ == "__main__":
     while True:
         try:
             conn, addr = sock.accept()
+            fullMessage = ''
             message = conn.recv(1024)
+            while len(message) == 1024:
+                fullMessage += message
+                message = conn.recv(1024)
+            fullMessage += message
+
+            print "fullMessage ", fullMessage
             try:
-                handle_request(message, conn, thread_pool)
+                handle_request(fullMessage, conn, thread_pool)
             except Exception as e:
                 response_builder = build_generic_response(500, "Internal server error")
                 conn.send(response_builder.build())
