@@ -21,8 +21,8 @@ HTTP/1.1 {status} {status_en}\r\nDate: {date}\nServer: {server}\nContent-length:
         self.response_data.update({"date": date})
         return self
 
-    def with_server(self, server):
-        self.response_data.update({"server": server})
+    def with_host(self, server):
+        self.response_data.update({"Host": server})
         return self
 
     def with_content_type(self, type):
@@ -47,7 +47,7 @@ def build_generic_response(code, message):
         .with_status(code) \
         .with_status_en(message) \
         .with_content_type("text/html; charset=utf-8") \
-        .with_server("FredServer") \
+        .with_host("FredServer") \
         .with_content_length(0) \
         .with_body(None)
     return response

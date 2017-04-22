@@ -58,7 +58,7 @@ def do_something_delete(headers):
         permissions = os.stat(file_path)
         permission = int(oct(permissions.st_mode)[-1:])
         if permission | 2 != permission:
-            return build_generic_response(401, "Unauthorised").build()
+            return build_generic_response(403, "Forbidden").build()
         if os.path.exists(file_path):
             os.remove(file_path)
             response = build_generic_response(200, "OK").build()
@@ -74,13 +74,13 @@ def do_something_get(connection, headers, head_request):
     response_builder = ResponseBuilder()
     response_builder.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
         .with_content_type("text/html; charset=utf-8") \
-        .with_server("FredServer")
+        .with_host("FredServer")
     try:
         file_path = os.getcwd() + "/text_files/" + headers['file_name']
         permissions = os.stat(file_path)
         permission = int(oct(permissions.st_mode)[-1:])
         if permission | 4 != permission:
-            response = build_generic_response(401, "Unauthorised").build()
+            response = build_generic_response(403, "Forbidden").build()
             connection.send(response)
         else:
             my_file = open(file_path)
@@ -135,20 +135,24 @@ def do_something_post(message_body, headers):
 
 def do_something_put(message_body, headers):
     file_path = os.getcwd() + "/text_files/" + headers['file_name']
-    permissions = os.stat(file_path)
-    permission = int(oct(permissions.st_mode)[-1:])
-    if permission | 2 != permission:
-        return build_generic_response(401, "Unauthorised").build()
+
     if os.path.exists(file_path):
+        permissions = os.stat(file_path)
+        permission = int(oct(permissions.st_mode)[-1:])
+        if permission | 2 != permission:
+            return build_generic_response(403, "Forbidden").build()
         my_file = open(file_path, 'w')
         if len(message_body) > 0:
             my_file.write(message_body)
             response = build_generic_response(200, "OK").build()
         else:
             response = build_generic_response(204, "No Content").build()
+        my_file.close()
     else:
         my_file = open(file_path, 'w+')
+        os.chmod(file_path, 0o646)
         my_file.write(message_body)
         response = build_generic_response(201, "Created").build()
+        my_file.close()
 
     return response
