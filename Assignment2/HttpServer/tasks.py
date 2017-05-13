@@ -1,6 +1,13 @@
-import os, json
+
+import os, json, sys
 from email.utils import formatdate
 from ResponseBuilder import ResponseBuilder, build_generic_response
+from cStringIO import StringIO
+
+sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2/app')
+sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2/CGI')
+from run_with_wsgi import run_with_wsgi
+from simple_app import simple_app
 
 
 # Each task must close it's own connection
@@ -8,7 +15,8 @@ from ResponseBuilder import ResponseBuilder, build_generic_response
 # handles HEAD request too since HEAD = GET without a body
 def task_handle_get(connection, headers, head_request):
     try:
-        do_something_get(connection, headers, head_request)
+        # do_something_get(connection, headers, head_request)
+        wsgi_get(connection, headers, head_request)
     except KeyError as e:
         print e
 
@@ -54,7 +62,7 @@ def task_handle_delete_request(connection, headers):
 # TODO: Move these in to another file - this is where the WSGI API will be handled
 def do_something_delete(headers):
     if 'file_name' in headers:
-        file_path = os.getcwd() + "/text_files/" + headers['file_name']
+        file_path = os.getcwd() + "/../text_files/" + headers['file_name']
         permissions = os.stat(file_path)
         permission = int(oct(permissions.st_mode)[-1:])
         if permission | 2 != permission:
@@ -70,13 +78,30 @@ def do_something_delete(headers):
     return response
 
 
+class CaptureOutput(list):
+    def __enter__(self):
+        sys.stdout = self._stringio = StringIO()
+        return self
+
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio
+        sys.stdout = sys.__stdout__
+
+
+def wsgi_get(connection, headers, head_request):
+    with CaptureOutput() as output:
+        run_with_wsgi(simple_app)
+    print output
+
+
 def do_something_get(connection, headers, head_request):
     response_builder = ResponseBuilder()
     response_builder.with_date(formatdate(timeval=None, localtime=False, usegmt=True)) \
         .with_content_type("text/html; charset=utf-8") \
         .with_host("FredServer")
     try:
-        file_path = os.getcwd() + "/text_files/" + headers['file_name']
+        file_path = os.getcwd() + "/../text_files/" + headers['file_name']
         permissions = os.stat(file_path)
         permission = int(oct(permissions.st_mode)[-1:])
         if permission | 4 != permission:
@@ -134,7 +159,7 @@ def do_something_post(message_body, headers):
 
 
 def do_something_put(message_body, headers):
-    file_path = os.getcwd() + "/text_files/" + headers['file_name']
+    file_path = os.getcwd() + "/../text_files/" + headers['file_name']
 
     if os.path.exists(file_path):
         permissions = os.stat(file_path)
