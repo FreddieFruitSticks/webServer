@@ -1,8 +1,8 @@
-
 import os, json, sys
 from email.utils import formatdate
 from ResponseBuilder import ResponseBuilder, build_generic_response
-from cStringIO import StringIO
+# from HttpMessageVerifier import parse_headers_to_dict
+from ContextManagers import CaptureOutput
 
 sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2/app')
 sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2/CGI')
@@ -77,19 +77,9 @@ def do_something_delete(headers):
 
     return response
 
-
-class CaptureOutput(list):
-    def __enter__(self):
-        sys.stdout = self._stringio = StringIO()
-        return self
-
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        del self._stringio
-        sys.stdout = sys.__stdout__
-
-
+# TODO: Need to change response builder to be able to dynamically add the output headers to the server response headers
 def wsgi_get(connection, headers, head_request):
+    print(headers)
     with CaptureOutput() as output:
         run_with_wsgi(simple_app)
     print output
