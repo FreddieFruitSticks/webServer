@@ -25,8 +25,8 @@ class ThreadPool(object):
         except threading.ThreadError as e:
             conn = kwargs.get('connection', None)
             if conn is not None:
-                response_builder = build_generic_response(500, "Internal server error")
-                conn.send(response_builder.build())
+                response = build_generic_response(500, "Internal server error")
+                conn.send(response)
                 print e
             else:
                 print "no connection object - something went seriously wrong"

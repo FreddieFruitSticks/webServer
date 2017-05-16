@@ -1,63 +1,29 @@
-from cStringIO import StringIO
-import sys, os
+class Header(object):
+    def __init__(self, status_code, status_description):
+        self.response = """HTTP/1.1 """
+        self.response += str(status_code)+" "
+        self.response += status_description+"\n"
+        self.body = None
 
-
-# from simple_app import simple_app
-def run_with_wsgi(application):
-    environ = {}
-    environ.update(os.environ)
-
-    headers = []
-
-    def write(data):
-        sys.stdout.write(data)
-        sys.stdout.flush()
-
-    def start_response(status, headers):
-        # Here loop through headers and send those to stdout
-        for header in headers:
-            sys.stdout.write(header[0])
-            sys.stdout.write(header[1])
-            sys.stdout.write("\n")
-        return write
-
-    result = application(environ, start_response)
-
-    try:
-        for data in result:
-            write(data)
-    finally:
-        if hasattr(result, 'close'):
-            result.close()
-
-
-def simple_app(environ, start_response):
-    status = '200 OK'
-    response_headers = [('Content-type', 'text/plain')]
-    start_response(status, response_headers)
-    return ['Hello from simple_app\n']
-
-
-class Capturing(list):
-    def __enter__(self):
-        sys.stdout = self._stringio = StringIO()
+    def with_header(self, dic):
+        header = """{key}: {value}\n""".format(**dic)
+        self.response += header
         return self
 
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        del self._stringio
-        sys.stdout = sys.__stdout__
+    def with_body(self, dictionary):
+        self.body = """\n{body} """.format(**dictionary)
+        return self
+
+    def build_response(self):
+        if self.body is not None:
+            self.response += self.body
+        return self.response
 
 
-def printy():
-    def printy2():
-        sys.stdout.write("hi\n")
-        sys.stdout.write("hi again")
+header = Header(200, "OK")
+response = header.with_header({'key': "Content-type", 'value': "text/plain"})\
+    .with_header({'key': "Connection", 'value': "keep-alive"})\
+    .with_body({"body": "HELLO WORLD"})\
+    .build_response()
 
-    printy2()
-
-
-with Capturing() as output:
-    run_with_wsgi(simple_app)
-
-print output
+print response

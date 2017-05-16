@@ -12,7 +12,6 @@ def run_with_wsgi(application):
         sys.stdout.flush()
 
     def start_response(status, headers):
-        # Here loop through headers and send those to stdout
         for header in headers:
             sys.stdout.write(header[0])
             sys.stdout.write(": ")

@@ -47,12 +47,12 @@ def handle_request(message, conn, thread_pool):
                 'headers': headers
             })
     except HttpVersionException as e:
-        response_builder = build_generic_response(505, e)
-        conn.send(response_builder.build())
+        response = build_generic_response(505, e)
+        conn.send(response.build())
         conn.close()
     except BadRequestException as e:
-        response_builder = build_generic_response(400, e)
-        conn.send(response_builder.build())
+        response = build_generic_response(400, e)
+        conn.send(response)
         conn.close()
 
 
@@ -78,8 +78,8 @@ if __name__ == "__main__":
             try:
                 handle_request(fullMessage, conn, thread_pool)
             except Exception as e:
-                response_builder = build_generic_response(500, "Internal server error")
-                conn.send(response_builder.build())
+                response = build_generic_response(500, "Internal server error")
+                conn.send(response)
                 conn.close()
                 print e
         except KeyboardInterrupt:

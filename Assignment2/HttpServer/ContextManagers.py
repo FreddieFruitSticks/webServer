@@ -1,5 +1,5 @@
 from cStringIO import StringIO
-import os, json, sys
+import sys
 
 
 class CaptureOutput(dict):
@@ -15,8 +15,8 @@ class CaptureOutput(dict):
         return self
 
     def __exit__(self, *args):
-        headersDict = self.parse_headers_to_dict(self._stringio.getvalue().splitlines())
-        self.update(headersDict)
+        headers_dict = self.parse_headers_to_dict(self._stringio.getvalue().splitlines())
+        self.update(headers_dict)
         self._stringio.close()
         del self._stringio
         sys.stdout = sys.__stdout__
