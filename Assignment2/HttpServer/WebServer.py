@@ -28,7 +28,8 @@ def handle_request(message, conn, thread_pool, server_env):
                 'connection': conn,
                 'headers': headers,
                 'head_request': head_req,
-                'server_env': server_env
+                'server_env': server_env,
+                'query_params':query_params
             })
         elif request_operation == 'POST':
             message_body = get_message_body(message)
@@ -72,14 +73,16 @@ if __name__ == "__main__":
             server_env_vars = ServerEnvironmentVariables(HTTP_HOST='FredsServer',
                                                          DOCUMENT_ROOT=os.getcwd(),
                                                          REMOTE_ADDR=addr[0],
-                                                         REMOTE_HOST=socket.gethostbyaddr(addr[0])[0])
+                                                         REMOTE_HOST=socket.gethostbyaddr(addr[0])[0],
+                                                         SERVER_PORT=PORT,
+                                                         SERVER_PROTOCOL="Http/1.1",
+                                                         SERVER_SOFTWARE="0.0.1")
             fullMessage = ''
             message = conn.recv(1024)
             while len(message) == 1024:
                 fullMessage += message
                 message = conn.recv(1024)
             fullMessage += message
-
             try:
                 handle_request(fullMessage, conn, thread_pool, server_env_vars)
             except Exception as e:

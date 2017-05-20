@@ -10,6 +10,7 @@ def run_with_wsgi(application, server_env):
     environ = {}
     environ.update(os.environ)
     environ = configureCGIEnvVars(environ, server_env)
+    environ['wsgi.version'] = '1.1'
     headers_set = []
 
     def write(data):

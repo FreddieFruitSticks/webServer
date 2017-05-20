@@ -32,11 +32,13 @@ def parse_request_line(headers_as_dict, request_header_split):
     query_params = None
     if len(request_header_split) == 3:
         request_header_protocol = request_header_split[2]
-        print request_header_split[1]
-        headers_as_dict['file_name'] = request_header_split[1].split("/")[1]
-        query_params = get_query_params(headers_as_dict['file_name'])
+        if "?" in request_header_split[1]:
+            headers_as_dict['file_name'], query_params = get_query_params(request_header_split[1])
+        else:
+            headers_as_dict['file_name'] = request_header_split[1]
     else:
         request_header_protocol = request_header_split[1]
+
     protocol_name = request_header_protocol.split("/")[0]
     protocol_version = request_header_protocol.split("/")[1].rstrip()
     headers_as_dict['request_operation'] = request_header_split[0]
@@ -48,18 +50,15 @@ def get_query_params(request_line):
     if request_line is None:
         return None
 
-    if "?" in request_line:
-        query_params = {}
-        query_params_string = request_line.split("?")
-        if len(query_params_string) > 2:
-            raise BadRequestException("Bad Request")
-        params_array = query_params_string[1].split("&")
-        for kwargs_params in params_array:
-            key_value = kwargs_params.split("=")
-            query_params[key_value[0]] = key_value[1]
-        return query_params
-    else:
-        return None
+    query_params = {}
+    query_params_string = request_line.split("?")
+    if len(query_params_string) > 2:
+        raise BadRequestException("Bad Request")
+    params_array = query_params_string[1].split("&")
+    for kwargs_params in params_array:
+        key_value = kwargs_params.split("=")
+        query_params[key_value[0]] = key_value[1]
+    return query_params_string[0], query_params
 
 
 def parse_headers_to_dict(message_split):
