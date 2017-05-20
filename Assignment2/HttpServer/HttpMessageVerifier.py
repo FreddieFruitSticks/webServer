@@ -11,12 +11,11 @@ def parse_headers(message):
     request_header_split = request_header.split(" ")
 
     request_header_operation = request_header_split[0]
-    protocol_name, protocol_version = parse_request_line(headers_as_dict, request_header_split)
+    protocol_name, protocol_version, query_params = parse_request_line(headers_as_dict, request_header_split)
     verify_access_permissions(headers_as_dict)
-
     if request_header_operation in supported_operations and protocol_name == 'HTTP' \
             and protocol_version == '1.1' and 'Host' in headers_as_dict:
-        return headers_as_dict
+        return headers_as_dict, query_params
     elif protocol_version != '1.1':
         raise HttpVersionException("HTTP Version Not Supported")
     else:
@@ -30,16 +29,37 @@ def verify_access_permissions(headers):
 
 
 def parse_request_line(headers_as_dict, request_header_split):
+    query_params = None
     if len(request_header_split) == 3:
         request_header_protocol = request_header_split[2]
+        print request_header_split[1]
         headers_as_dict['file_name'] = request_header_split[1].split("/")[1]
+        query_params = get_query_params(headers_as_dict['file_name'])
     else:
         request_header_protocol = request_header_split[1]
     protocol_name = request_header_protocol.split("/")[0]
     protocol_version = request_header_protocol.split("/")[1].rstrip()
     headers_as_dict['request_operation'] = request_header_split[0]
     headers_as_dict['protocol_version'] = protocol_version
-    return protocol_name, protocol_version
+    return protocol_name, protocol_version, query_params
+
+
+def get_query_params(request_line):
+    if request_line is None:
+        return None
+
+    if "?" in request_line:
+        query_params = {}
+        query_params_string = request_line.split("?")
+        if len(query_params_string) > 2:
+            raise BadRequestException("Bad Request")
+        params_array = query_params_string[1].split("&")
+        for kwargs_params in params_array:
+            key_value = kwargs_params.split("=")
+            query_params[key_value[0]] = key_value[1]
+        return query_params
+    else:
+        return None
 
 
 def parse_headers_to_dict(message_split):

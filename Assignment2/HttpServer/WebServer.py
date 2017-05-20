@@ -1,9 +1,10 @@
-import socket
+import socket, os
 from ThreadPool import ThreadPool
 from tasks import task_handle_get, task_handle_post_request, task_handle_put_request, task_handle_delete_request
 from HttpMessageVerifier import parse_headers
 from NetworkExceptions import BadRequestException, HttpVersionException
 from ResponseBuilder import build_generic_response
+from EnvironmentHeaders import ServerEnvironmentVariables
 
 HOST = ''
 PORT = 50008
@@ -15,9 +16,9 @@ sock.listen(1)
 
 
 # TODO: Think about putting this in the thread that it calls.
-def handle_request(message, conn, thread_pool):
+def handle_request(message, conn, thread_pool, server_env):
     try:
-        headers = parse_headers(message)
+        headers, query_params = parse_headers(message)
         request_operation = headers['request_operation']
         message_body = get_message_body(message)
 
@@ -26,7 +27,8 @@ def handle_request(message, conn, thread_pool):
             thread_pool.submit_task(task_handle_get, {
                 'connection': conn,
                 'headers': headers,
-                'head_request': head_req
+                'head_request': head_req,
+                'server_env': server_env
             })
         elif request_operation == 'POST':
             message_body = get_message_body(message)
@@ -47,11 +49,11 @@ def handle_request(message, conn, thread_pool):
                 'headers': headers
             })
     except HttpVersionException as e:
-        response = build_generic_response(505, e)
+        response = build_generic_response(505, e.message)
         conn.send(response.build())
         conn.close()
     except BadRequestException as e:
-        response = build_generic_response(400, e)
+        response = build_generic_response(400, e.message)
         conn.send(response)
         conn.close()
 
@@ -67,6 +69,10 @@ if __name__ == "__main__":
     while True:
         try:
             conn, addr = sock.accept()
+            server_env_vars = ServerEnvironmentVariables(HTTP_HOST='FredsServer',
+                                                         DOCUMENT_ROOT=os.getcwd(),
+                                                         REMOTE_ADDR=addr[0],
+                                                         REMOTE_HOST=socket.gethostbyaddr(addr[0])[0])
             fullMessage = ''
             message = conn.recv(1024)
             while len(message) == 1024:
@@ -74,9 +80,8 @@ if __name__ == "__main__":
                 message = conn.recv(1024)
             fullMessage += message
 
-            print "fullMessage ", fullMessage
             try:
-                handle_request(fullMessage, conn, thread_pool)
+                handle_request(fullMessage, conn, thread_pool, server_env_vars)
             except Exception as e:
                 response = build_generic_response(500, "Internal server error")
                 conn.send(response)

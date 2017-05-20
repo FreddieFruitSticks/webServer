@@ -3,6 +3,7 @@ from email.utils import formatdate
 from ResponseBuilder import ResponseBuilder, build_generic_response
 # from HttpMessageVerifier import parse_headers_to_dict
 from ContextManagers import CaptureOutput
+from EnvironmentHeaders import ServerEnvironmentVariables
 
 sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2/app')
 sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2/CGI')
@@ -13,10 +14,10 @@ from simple_app import simple_app
 # Each task must close it's own connection
 
 # handles HEAD request too since HEAD = GET without a body
-def task_handle_get(connection, headers, head_request):
+def task_handle_get(connection, headers, head_request, server_env):
     try:
+        wsgi_get(connection, headers, head_request, server_env)
         # do_something_get(connection, headers, head_request)
-        do_something_get(connection, headers, head_request)
     except KeyError as e:
         print e
 
@@ -78,12 +79,11 @@ def do_something_delete(headers):
     return response
 
 
-# TODO: Need to change response builder to be able to dynamically add the output headers to the server response headers
-def wsgi_get(connection, headers, head_request):
-    print(headers)
+# TODO: redirect stdout is not threadsafe.
+def wsgi_get(connection, headers, head_request,server_env_vars):
     with CaptureOutput() as output:
-        run_with_wsgi(simple_app)
-    print output
+        run_with_wsgi(simple_app, server_env_vars)
+    print "wsgi_get output: ", output
 
 
 def do_something_get(connection, headers, head_request):
@@ -102,7 +102,8 @@ def do_something_get(connection, headers, head_request):
             else:
                 body = None
             response = ResponseBuilder(200, "OK")
-            response = response.with_header({"key": "Date", "value": formatdate(timeval=None, localtime=False, usegmt=True)}) \
+            response = response.with_header(
+                {"key": "Date", "value": formatdate(timeval=None, localtime=False, usegmt=True)}) \
                 .with_header({"key": "Content-type", "value": "text/html; charset=utf-8"}) \
                 .with_header({"key": "Host", "value": "FredServer"}) \
                 .with_header({"key": "Content-length", "value": os.path.getsize(file_path)}) \
@@ -147,11 +148,12 @@ def do_something_post(message_body, headers):
     else:
         message_len = len(message_body) + 1
         response = ResponseBuilder(200, "OK")
-        response = response.with_header({"key": "Date", "value": formatdate(timeval=None, localtime=False, usegmt=True)}) \
+        response = response.with_header(
+            {"key": "Date", "value": formatdate(timeval=None, localtime=False, usegmt=True)}) \
             .with_header({"key": "Content-type", "value": "text/html; charset=utf-8"}) \
             .with_header({"key": "Host", "value": "FredServer"}) \
-            .with_header({"key": "Content-length", "value": message_len})\
-            .with_body({"body": message_body})\
+            .with_header({"key": "Content-length", "value": message_len}) \
+            .with_body({"body": message_body}) \
             .build_response()
     return response
 

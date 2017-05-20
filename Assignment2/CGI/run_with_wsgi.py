@@ -1,13 +1,21 @@
 import os, sys
 
 
-def run_with_wsgi(application):
+def configureCGIEnvVars(environ, server_env):
+    updated_env = dict(environ.items() + server_env.get_env_vars().items())
+    return updated_env
+
+
+def run_with_wsgi(application, server_env):
     environ = {}
     environ.update(os.environ)
-
-    headers = []
+    environ = configureCGIEnvVars(environ, server_env)
+    headers_set = []
 
     def write(data):
+        if not headers_set:
+            raise AssertionError("You cant write body before setting headers")
+
         sys.stdout.write(data)
         sys.stdout.flush()
 
@@ -17,10 +25,11 @@ def run_with_wsgi(application):
             sys.stdout.write(": ")
             sys.stdout.write(header[1])
             sys.stdout.write("\n")
+
+        headers_set[:] = [status, headers]
         return write
 
     result = application(environ, start_response)
-
     try:
         for data in result:
             write(data)
