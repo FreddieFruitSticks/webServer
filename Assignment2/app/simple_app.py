@@ -1,14 +1,15 @@
 import os, sys
+from email.utils import formatdate
 
 
 def simple_app(environ, start_response):
     status = '200 OK'
+    message = '\nHello from simple_app'
     response_headers = [
         ('Content-type', 'text/plain'),
-        ('DOCUMENT_ROOT', environ.get('DOCUMENT_ROOT')),
-        ('HTTP_HOST', environ.get('HTTP_HOST')),
-        ('REMOTE_ADDR', environ.get('REMOTE_ADDR')),
-        ('REMOTE_HOST', environ.get('REMOTE_HOST'))]
+        ('Content-length', str(len(message))),
+        ('Date', formatdate(timeval=None, localtime=False, usegmt=True)),
+        ('Host', 'FredServer')]
     start_response(status, response_headers)
-    return ['Hello from simple_app\n']
+    return [message]
 

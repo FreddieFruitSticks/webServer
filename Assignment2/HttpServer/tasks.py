@@ -15,7 +15,6 @@ from simple_app import simple_app
 
 # handles HEAD request too since HEAD = GET without a body
 def task_handle_get(connection, headers, head_request, server_env, query_params):
-    print headers
     if headers.get('Content-length') is not None:
         server_env.set_env_var('CONTENT_LENGTH', headers.get('Content-length'))
 
@@ -94,7 +93,16 @@ def do_something_delete(headers):
 def wsgi_get(connection, headers, head_request, server_env_vars):
     with CaptureOutput() as output:
         run_with_wsgi(simple_app, server_env_vars)
-    print "wsgi_get output: ", output
+    app_response = output[0]
+    response = ResponseBuilder(200, "OK")
+    response = response\
+        .with_header({"key": "Content-length", "value": app_response.get('Content-length')})\
+        .with_header({"key": "Host", "value": app_response.get('Host')})\
+        .with_header({"key": "Date", "value": app_response.get('Date')})\
+        .with_header({"key": "Content-type", "value": app_response.get('Content-type')})\
+        .with_body({"body": app_response.get("body")})\
+        .build_response()
+    connection.send(response)
 
 
 def do_something_get(connection, headers, head_request):

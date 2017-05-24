@@ -10,7 +10,15 @@ def run_with_wsgi(application, server_env):
     environ = {}
     environ.update(os.environ)
     environ = configureCGIEnvVars(environ, server_env)
-    environ['wsgi.version'] = '1.1'
+    environ['wsgi.version'] = (1, 0)
+    environ['wsgi.input'] = sys.stdin
+    environ['wsgi.error'] = sys.stderr
+    environ['wsgi.multithread'] = True
+    environ['wsgi.multiprocess'] = True
+    environ['wsgi.run_once'] = True
+
+    # sys.__stdout__.write(str(environ.get('off')))
+
     headers_set = []
 
     def write(data):
@@ -21,6 +29,14 @@ def run_with_wsgi(application, server_env):
         sys.stdout.flush()
 
     def start_response(status, headers):
+        sys.stdout.write("status_code: ")
+        sys.stdout.write(status.split(" ")[0])
+        sys.stdout.write("\n")
+
+        sys.stdout.write("status_description: ")
+        sys.stdout.write(status.split(" ")[1])
+        sys.stdout.write("\n")
+
         for header in headers:
             sys.stdout.write(header[0])
             sys.stdout.write(": ")
