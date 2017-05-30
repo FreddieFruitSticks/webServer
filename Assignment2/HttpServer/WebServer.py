@@ -29,25 +29,31 @@ def handle_request(message, conn, thread_pool, server_env):
                 'headers': headers,
                 'head_request': head_req,
                 'server_env': server_env,
-                'query_params':query_params
+                'query_params': query_params
             })
         elif request_operation == 'POST':
             message_body = get_message_body(message)
             thread_pool.submit_task(task_handle_post_request, {
                 'message_body': message_body,
                 'connection': conn,
-                'headers': headers
+                'headers': headers,
+                'server_env': server_env,
+                'query_params': query_params
             })
         elif request_operation == 'PUT':
             thread_pool.submit_task(task_handle_put_request, {
                 'message_body': message_body,
                 'connection': conn,
-                'headers': headers
+                'headers': headers,
+                'server_env': server_env,
+                'query_params': query_params
             })
         elif request_operation == 'DELETE':
             thread_pool.submit_task(task_handle_delete_request, {
                 'connection': conn,
-                'headers': headers
+                'headers': headers,
+                'server_env': server_env,
+                'query_params': query_params
             })
     except HttpVersionException as e:
         response = build_generic_response(505, e.message)
