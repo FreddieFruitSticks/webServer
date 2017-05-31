@@ -1,5 +1,7 @@
 from FileServerTasks import *
 from WebServerTasks import *
+from ResponseBuilder import ResponseBuilder
+import re, hashlib, base64
 
 
 # Each task must close it's own connection
@@ -16,14 +18,45 @@ def set_wsgi_env(headers, query_params, server_env):
     server_env.set_env_var('PATH_INFO', headers.get('file_name'))
 
 
+def verify_handshake(headers):
+    pattern = re.compile('^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$')
+    isB64 = pattern.match(headers.get("Sec-WebSocket-Key"))
+    print isB64
+    if headers.get("Upgrade").lower() == "websocket" and \
+                    isB64 is not None and \
+                    headers.get("Sec-WebSocket-Version") == 13 and \
+                    headers.get("Host") is not None and \
+                    headers.get("Origin") is not None:
+        return True
+    return False
+
+
 def task_handle_get(connection, headers, head_request, server_env, query_params):
     set_wsgi_env(headers, query_params, server_env)
+    if headers.get("Connection") == "Upgrade":
+        if verify_handshake(headers):
+            m = hashlib.sha1()
+            m.update(headers.get("Sec-WebSocket-Key") + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+            sha1_key = m.digest()
+            websock_accept = base64.b64decode(sha1_key)
 
-    try:
-        wsgi_get(connection, headers, head_request, server_env)
-        # do_something_get(connection, headers, head_request)
-    except KeyError as e:
-        print e
+            response = ResponseBuilder(101, "Switching Protocols")
+            response = response.with_header(
+                {"key": "Date", "value": formatdate(timeval=None, localtime=False, usegmt=True)}) \
+                .with_header({"key": "Upgrade", "value": "websocket"}) \
+                .with_header({"key": "Connection", "value": "Upgrade"}) \
+                .with_header({"key": "Sec-WebSocket-Accept", "value": websock_accept}) \
+                .build_response()
+            connection.send(response)
+        else:
+            connection.send(build_generic_response(400, "Bad Request"))
+            connection.close()
+    else:
+        try:
+            wsgi_get(connection, headers, head_request, server_env)
+            # do_something_get(connection, headers, head_request)
+        except KeyError as e:
+            print e
 
 
 def task_handle_post_request(connection, message_body, headers, query_params, server_env):
