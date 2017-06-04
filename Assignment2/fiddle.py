@@ -1,4 +1,6 @@
-import sys, re
-pattern = re.compile('^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$')
-isB64 = pattern.match("AQIDBAUGBwgJCgsMDQ4PEC==")
-print isB64
+import sys, re, hashlib, base64
+string = "7061756c"
+b = bytearray(['\x70','\x61','\x75', '\x6c'])
+# print string.decode('hex')
+# print "\x70"
+print '\x31'

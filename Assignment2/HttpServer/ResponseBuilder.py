@@ -5,11 +5,11 @@ class ResponseBuilder(object):
     def __init__(self, status_code, status_description):
         self.response = """HTTP/1.1 """
         self.response += str(status_code) + " "
-        self.response += status_description + "\n"
+        self.response += status_description + "\r\n"
         self.body = None
 
     def with_header(self, dictionary):
-        header = """{key}: {value}\n""".format(**dictionary)
+        header = """{key}: {value}\r\n""".format(**dictionary)
         self.response += header
         return self
 

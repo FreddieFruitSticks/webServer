@@ -6,6 +6,7 @@ from NetworkExceptions import BadRequestException, HttpVersionException
 from ResponseBuilder import build_generic_response
 from EnvironmentHeaders import ServerEnvironmentVariables
 
+
 HOST = ''
 PORT = 50008
 
@@ -74,8 +75,9 @@ if __name__ == "__main__":
     thread_pool = ThreadPool(4)
     thread_pool.start()
     while True:
+        conn, addr = sock.accept()
         try:
-            conn, addr = sock.accept()
+
             server_env_vars = ServerEnvironmentVariables(HTTP_HOST='FredsServer',
                                                          DOCUMENT_ROOT=os.getcwd(),
                                                          REMOTE_ADDR=addr[0],
@@ -89,6 +91,7 @@ if __name__ == "__main__":
                 fullMessage += message
                 message = conn.recv(1024)
             fullMessage += message
+            print message
             try:
                 handle_request(fullMessage, conn, thread_pool, server_env_vars)
             except Exception as e:
@@ -97,6 +100,8 @@ if __name__ == "__main__":
                 conn.close()
                 print e
         except KeyboardInterrupt:
+            conn.close()
+            sock.close()
             raise
         finally:
             pass

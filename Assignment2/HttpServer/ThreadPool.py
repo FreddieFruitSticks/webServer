@@ -3,6 +3,7 @@ import threading
 from ResponseBuilder import build_generic_response
 
 
+# TODO: This needs to be a proper threadpool.
 class ThreadPool(object):
     pool_size = 10
     _thread_queue = Queue()
