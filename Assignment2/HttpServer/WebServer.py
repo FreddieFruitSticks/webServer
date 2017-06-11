@@ -91,7 +91,6 @@ if __name__ == "__main__":
                 fullMessage += message
                 message = conn.recv(1024)
             fullMessage += message
-            print message
             try:
                 handle_request(fullMessage, conn, thread_pool, server_env_vars)
             except Exception as e:

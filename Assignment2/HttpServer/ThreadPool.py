@@ -22,6 +22,7 @@ class ThreadPool(object):
         try:
             thread = MyThread(target=task_obj.task, kwargs=task_obj.kwargs)
             # thread.set_target(task_obj.task, task_obj.kwargs)
+            thread.daemon = True
             thread.start()
         except threading.ThreadError as e:
             conn = kwargs.get('connection', None)

@@ -49,20 +49,13 @@ def task_handle_get(connection, headers, head_request, server_env, query_params)
                 .with_header({"key": "Upgrade", "value": "websocket"}) \
                 .with_header({"key": "Connection", "value": "Upgrade"}) \
                 .with_header({"key": "Sec-WebSocket-Accept", "value": websock_accept}) \
+                .with_body({"body": ""}) \
                 .build_response()
-            print response
-            # connection.setsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF, len(response)-1)
-            # connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            # connection.setblocking(True)
-            bytes = connection.sendall(response)
-            # sock_file = connection.makefile(mode='w')
-            # sock_file.write(response)
-            # sock_file.flush()
-            # sock_file.close()
-            # send_web_sock_message(connection, "hello")
-            # recv_web_sock_message(connection)
+            connection.sendall(response)
+            # send_web_sock_message(connection, "this is a string that is over 125 chars in length. Well maybe that is not true at this point but it sure is greater than 125 chars at this point.")
+            recv_web_sock_message(connection)
         else:
-            connection.send(build_generic_response(400, "Bad Request"))
+            connection.sendall(build_generic_response(400, "Bad Request"))
             connection.close()
     else:
         try:
@@ -76,7 +69,7 @@ def task_handle_post_request(connection, message_body, headers, query_params, se
     set_wsgi_env(headers, query_params, server_env)
     response = do_something_post(message_body, headers)
     try:
-        connection.send(response)
+        connection.sendall(response)
     except Exception as e:
         print e
     finally:
@@ -95,7 +88,7 @@ def task_handle_put_request(connection, message_body, headers, query_params, ser
         set_wsgi_env(headers, query_params, server_env)
         response = do_something_put(message_body, headers)
     try:
-        connection.send(response)
+        connection.sendall(response)
     except Exception as e:
         print e
     finally:
@@ -106,7 +99,7 @@ def task_handle_delete_request(connection, headers, query_params, server_env):
     set_wsgi_env(headers, query_params, server_env)
     response = do_something_delete(headers)
     try:
-        connection.send(response)
+        connection.sendall(response)
     except Exception as e:
         print e
     finally:

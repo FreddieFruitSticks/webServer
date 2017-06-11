@@ -14,10 +14,11 @@ class ResponseBuilder(object):
         return self
 
     def with_body(self, dictionary):
-        self.body = """\n{body} """.format(**dictionary)
+        self.body = """{body}""".format(**dictionary)
         return self
 
     def build_response(self):
+        self.response += """\r\n"""
         if self.body is not None:
             self.response += self.body
         return self.response
