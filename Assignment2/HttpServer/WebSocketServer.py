@@ -1,6 +1,17 @@
 from Utils import message_len_as_hex
 
 
+def send_close_frame(connection, reason):
+    payload = []
+    payload.insert(0, '\x81')
+    message_length = 2
+    payload.insert(1, message_len_as_hex(message_length))
+    payload.insert(2, message_len_as_hex((reason >> 8) & 255))
+    payload.insert(3, message_len_as_hex(reason & 255))
+
+    map(lambda frame: connection.sendall(frame), payload)
+
+
 def send_web_sock_message(connection, message):
     payload = []
     payload.insert(0, '\x81')  # 1000 0001 -> first 1 for FIN, 3 0's for RSV's and 0001 (0x01) for text
@@ -34,7 +45,6 @@ def recv_web_sock_message(connection):
     try:
         while not closed:
             payload = ''
-            payload_byte = ''
             print "waiting for websocket message"
             payload_byte = connection.recv(1024)
             if len(payload_byte) != 0:
@@ -42,24 +52,56 @@ def recv_web_sock_message(connection):
                     payload = payload + payload_byte
                     payload_byte = connection.recv(1024)
 
-                print "payload_byte", payload_byte
                 data_type = ord(payload_byte[0])
-                mask_and_length = ord(payload_byte[1])
-                length = mask_and_length & 127
-                print "length",length
+                mask_bit_and_length = ord(payload_byte[1])
+
+                length = mask_bit_and_length & 127
                 if length <= 125:
                     mask = payload_byte[2:6]
-                    print "mask", mask
-                    print "len mask", len(mask)
+                    masked_message = payload_byte[6:length + 7]
+                    if data_type == 136:
+                        print "!!CLOSING!!!"
+                        closed = True
+                        message = [ord(byte) ^ ord(mask[index % 4]) for index, byte in
+                                   enumerate(masked_message)]
+                        first_byte = message[0] << 8
+                        second_byte = message[1]
+                        shutdown_reason = first_byte + second_byte
+                        send_close_frame(connection, shutdown_reason)
+                        connection.close()
+                    else:
+                        message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in
+                                   enumerate(masked_message)]
+                        # send_close_frame(connection, 1000)
+                        # closed = True
 
-                    masked_message = payload_byte[6:]
-                    print "masked_message",masked_message
-                    for ind, obj in enumerate(masked_message):
-                        print ind,obj
-                    message = [(ord(byte.encode('hex').decode('hex')) ^ ord(mask[index%4])) for index, byte in enumerate(masked_message)]
                     print "message", message
+                elif length == 126:
+                    first_byte = ord(payload_byte[2]) << 8
+                    second_byte = ord(payload_byte[3])
+                    mask = payload_byte[4:8]
+                    payload_length = first_byte + second_byte
+                    masked_message = payload_byte[8:payload_length + 9]
+                    message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
+                    print message
+                elif length == 127:
+                    first_byte = ord(payload_byte[2]) << 56
+                    second_byte = ord(payload_byte[3]) << 48
+                    third_byte = ord(payload_byte[4]) << 40
+                    fourth_byte = ord(payload_byte[5]) << 32
+                    fifth_byte = ord(payload_byte[6]) << 24
+                    sixth_byte = ord(payload_byte[7]) << 16
+                    seventh_byte = ord(payload_byte[8]) << 8
+                    eighth_byte = ord(payload_byte[9])
+                    mask = payload_byte[10:14]
+                    payload_length = first_byte + second_byte + third_byte + fourth_byte + fifth_byte + sixth_byte + seventh_byte + eighth_byte
+                    masked_message = payload_byte[14:payload_length + 15]
+                    message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
+                    print message
             else:
                 print "connection closed on other side!"
+                shutdown_reason = 1000
+                send_close_frame(connection, shutdown_reason)
                 connection.close()
                 closed = True
     except Exception:
