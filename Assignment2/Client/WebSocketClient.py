@@ -12,7 +12,8 @@ import time
 
 from websocket import create_connection
 ws = create_connection("ws://localhost:50008")
-ws.send("this is a string that is over 125 chars in length. Well maybe that is not true at this point but it sure is greater than 125 chars at this point.")
+# ws.send("this is a string that is over 125 chars in length. Well maybe that is not true at this point but it sure is greater than 125 chars at this point.")
+ws.send("hello")
 # ws.recv()
 time.sleep(5)
 ws.close()

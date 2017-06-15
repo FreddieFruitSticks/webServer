@@ -1,4 +1,4 @@
-from Utils import message_len_as_hex
+from Utils import message_len_as_hex, recvall
 
 
 def send_close_frame(connection, reason):
@@ -46,58 +46,23 @@ def recv_web_sock_message(connection):
         while not closed:
             payload = ''
             print "waiting for websocket message"
-            payload_byte = connection.recv(1024)
+            payload_byte, payload_length, starting_position = recvall(connection, 4096)
             if len(payload_byte) != 0:
-                while len(payload_byte) == 1024:
-                    payload = payload + payload_byte
-                    payload_byte = connection.recv(1024)
-
                 data_type = ord(payload_byte[0])
-                mask_bit_and_length = ord(payload_byte[1])
-
-                length = mask_bit_and_length & 127
-                if length <= 125:
-                    mask = payload_byte[2:6]
-                    masked_message = payload_byte[6:length + 7]
-                    if data_type == 136:
-                        print "!!CLOSING!!!"
-                        closed = True
-                        message = [ord(byte) ^ ord(mask[index % 4]) for index, byte in
-                                   enumerate(masked_message)]
-                        first_byte = message[0] << 8
-                        second_byte = message[1]
-                        shutdown_reason = first_byte + second_byte
-                        send_close_frame(connection, shutdown_reason)
-                        connection.close()
-                    else:
-                        message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in
-                                   enumerate(masked_message)]
-                        # send_close_frame(connection, 1000)
-                        # closed = True
-
-                    print "message", message
-                elif length == 126:
-                    first_byte = ord(payload_byte[2]) << 8
-                    second_byte = ord(payload_byte[3])
-                    mask = payload_byte[4:8]
-                    payload_length = first_byte + second_byte
-                    masked_message = payload_byte[8:payload_length + 9]
-                    message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
-                    print message
-                elif length == 127:
-                    first_byte = ord(payload_byte[2]) << 56
-                    second_byte = ord(payload_byte[3]) << 48
-                    third_byte = ord(payload_byte[4]) << 40
-                    fourth_byte = ord(payload_byte[5]) << 32
-                    fifth_byte = ord(payload_byte[6]) << 24
-                    sixth_byte = ord(payload_byte[7]) << 16
-                    seventh_byte = ord(payload_byte[8]) << 8
-                    eighth_byte = ord(payload_byte[9])
-                    mask = payload_byte[10:14]
-                    payload_length = first_byte + second_byte + third_byte + fourth_byte + fifth_byte + sixth_byte + seventh_byte + eighth_byte
-                    masked_message = payload_byte[14:payload_length + 15]
-                    message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
-                    print message
+                mask = payload_byte[starting_position:starting_position + 4]
+                masked_message = payload_byte[starting_position + 4:]
+                message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
+                print message
+                if data_type == 136:
+                    print "!!CLOSING!!!"
+                    closed = True
+                    message = [ord(byte) ^ ord(mask[index % 4]) for index, byte in
+                               enumerate(masked_message)]
+                    first_byte = message[0] << 8
+                    second_byte = message[1]
+                    shutdown_reason = first_byte + second_byte
+                    send_close_frame(connection, shutdown_reason)
+                    connection.close()
             else:
                 print "connection closed on other side!"
                 shutdown_reason = 1000
