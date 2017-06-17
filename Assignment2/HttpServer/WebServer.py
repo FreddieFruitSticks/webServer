@@ -5,6 +5,7 @@ from HttpMessageVerifier import parse_headers
 from NetworkExceptions import BadRequestException, HttpVersionException
 from ResponseBuilder import build_generic_response
 from EnvironmentHeaders import ServerEnvironmentVariables
+from Utils import recvall_http
 
 
 HOST = ''
@@ -85,14 +86,16 @@ if __name__ == "__main__":
                                                          SERVER_PORT=PORT,
                                                          SERVER_PROTOCOL="Http/1.1",
                                                          SERVER_SOFTWARE="0.0.1")
-            fullMessage = ''
+
+            # full_message = recvall_http(conn, 1024)
+            full_message = ''
             message = conn.recv(1024)
             while len(message) == 1024:
-                fullMessage += message
+                full_message += message
                 message = conn.recv(1024)
-            fullMessage += message
+            full_message += message
             try:
-                handle_request(fullMessage, conn, thread_pool, server_env_vars)
+                handle_request(full_message, conn, thread_pool, server_env_vars)
             except Exception as e:
                 response = build_generic_response(500, "Internal server error")
                 conn.send(response)

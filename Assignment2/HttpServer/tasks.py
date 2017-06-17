@@ -1,8 +1,8 @@
 from FileServerTasks import *
 from WebServerTasks import *
 from ResponseBuilder import ResponseBuilder
-import re, hashlib, base64, socket
-from WebSocketServer import recv_web_sock_message, send_web_sock_message
+import re, hashlib, base64
+from WebSocketServer import recv_web_sock_message
 
 
 # Each task must close it's own connection
@@ -52,7 +52,6 @@ def task_handle_get(connection, headers, head_request, server_env, query_params)
                 .with_body({"body": ""}) \
                 .build_response()
             connection.sendall(response)
-            # send_web_sock_message(connection, "this is a string that is over 125 chars in length. Well maybe that is not true at this point but it sure is greater than 125 chars at this point.")
             recv_web_sock_message(connection)
         else:
             connection.sendall(build_generic_response(400, "Bad Request"))

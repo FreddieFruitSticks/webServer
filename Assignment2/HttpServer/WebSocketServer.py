@@ -1,4 +1,5 @@
-from Utils import message_len_as_hex, recvall
+from Utils import message_len_as_hex, recvall_websocket
+from NetworkExceptions import ConnectionAbruptlyClosedException
 
 
 def send_close_frame(connection, reason):
@@ -12,6 +13,7 @@ def send_close_frame(connection, reason):
     map(lambda frame: connection.sendall(frame), payload)
 
 
+# I leave it hardcoded this way to clear how the protocol works
 def send_web_sock_message(connection, message):
     payload = []
     payload.insert(0, '\x81')  # 1000 0001 -> first 1 for FIN, 3 0's for RSV's and 0001 (0x01) for text
@@ -44,15 +46,15 @@ def recv_web_sock_message(connection):
     closed = False
     try:
         while not closed:
-            payload = ''
             print "waiting for websocket message"
-            payload_byte, payload_length, starting_position = recvall(connection, 4096)
+            payload_byte, payload_length, starting_position = recvall_websocket(connection, 4096)
             if len(payload_byte) != 0:
                 data_type = ord(payload_byte[0])
                 mask = payload_byte[starting_position:starting_position + 4]
                 masked_message = payload_byte[starting_position + 4:]
                 message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
-                print message
+                print ''.join(message)
+
                 if data_type == 136:
                     print "!!CLOSING!!!"
                     closed = True
@@ -69,6 +71,8 @@ def recv_web_sock_message(connection):
                 send_close_frame(connection, shutdown_reason)
                 connection.close()
                 closed = True
+    except ConnectionAbruptlyClosedException:
+        print "Connection has abruptly closed while listening for message"
     except Exception:
         print "Exception in recv web sock message"
         raise

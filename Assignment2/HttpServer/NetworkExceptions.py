@@ -4,3 +4,7 @@ class BadRequestException(Exception):
 
 class HttpVersionException(Exception):
     pass
+
+
+class ConnectionAbruptlyClosedException(Exception):
+    pass
