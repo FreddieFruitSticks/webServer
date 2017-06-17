@@ -87,13 +87,13 @@ if __name__ == "__main__":
                                                          SERVER_PROTOCOL="Http/1.1",
                                                          SERVER_SOFTWARE="0.0.1")
 
-            # full_message = recvall_http(conn, 1024)
-            full_message = ''
-            message = conn.recv(1024)
-            while len(message) == 1024:
-                full_message += message
-                message = conn.recv(1024)
-            full_message += message
+            full_message = recvall_http(conn, 2048)
+            # full_message = ''
+            # message = conn.recv(1024)
+            # while len(message) == 1024:
+            #     full_message += message
+            #     message = conn.recv(1024)
+            # full_message += message
             try:
                 handle_request(full_message, conn, thread_pool, server_env_vars)
             except Exception as e:

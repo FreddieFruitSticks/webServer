@@ -13,7 +13,7 @@ def send_close_frame(connection, reason):
     map(lambda frame: connection.sendall(frame), payload)
 
 
-# I leave it hardcoded this way to clear how the protocol works
+# I leave it hardcoded this way to be clear how the protocol works
 def send_web_sock_message(connection, message):
     payload = []
     payload.insert(0, '\x81')  # 1000 0001 -> first 1 for FIN, 3 0's for RSV's and 0001 (0x01) for text
