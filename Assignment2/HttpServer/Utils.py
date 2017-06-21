@@ -1,4 +1,5 @@
 from NetworkExceptions import ConnectionAbruptlyClosedException
+import re, base64
 
 
 def message_len_as_hex(message_length):
@@ -28,6 +29,23 @@ def message_len_as_hex(message_length):
     if len(hex_val) % 2 != 0:
         hex_val = hex_val[1:]
     return hex_val.decode('hex')
+
+
+def verify_websocket_handshake(headers):
+    pattern = re.compile(
+        '^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$')  # regex to verify b64 encoded
+    isB64 = pattern.match(headers.get("Sec-WebSocket-Key"))
+    if isB64 is not None:
+        decoded = base64.b64decode(headers.get("Sec-WebSocket-Key"));
+        if len(decoded) != 16:
+            isB64 = None
+
+    if headers.get("Upgrade").lower() == "websocket" and \
+                    isB64 is not None and \
+                    headers.get("Sec-WebSocket-Version") == "13" and \
+                    headers.get("Host") is not None:
+        return True
+    return False
 
 
 # starting position is the beginning of the mask which is 4 bytes, rest is payload - is this method doing to much?

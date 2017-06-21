@@ -52,8 +52,6 @@ def recv_web_sock_message(connection):
                 data_type = ord(payload_byte[0])
                 mask = payload_byte[starting_position:starting_position + 4]
                 masked_message = payload_byte[starting_position + 4:]
-                message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
-                print ''.join(message)
 
                 if data_type == 136:
                     print "!!CLOSING!!!"
@@ -65,6 +63,9 @@ def recv_web_sock_message(connection):
                     shutdown_reason = first_byte + second_byte
                     send_close_frame(connection, shutdown_reason)
                     connection.close()
+                else:
+                    message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
+                    print ''.join(message)
             else:
                 print "connection closed on other side!"
                 shutdown_reason = 1000

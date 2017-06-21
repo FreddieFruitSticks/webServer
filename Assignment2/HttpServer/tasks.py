@@ -1,8 +1,11 @@
+import hashlib
+import base64
+
 from FileServerTasks import *
 from WebServerTasks import *
 from ResponseBuilder import ResponseBuilder
-import re, hashlib, base64
 from WebSocketServer import recv_web_sock_message
+from Utils import verify_websocket_handshake
 
 
 # Each task must close it's own connection
@@ -17,22 +20,6 @@ def set_wsgi_env(headers, query_params, server_env):
     server_env.set_env_var('REQUEST_METHOD', headers.get('request_operation'))
     server_env.set_env_var('SCRIPT_NAME', '')
     server_env.set_env_var('PATH_INFO', headers.get('file_name'))
-
-
-def verify_websocket_handshake(headers):
-    pattern = re.compile('^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$')
-    isB64 = pattern.match(headers.get("Sec-WebSocket-Key"))
-    if isB64 is not None:
-        decoded = base64.b64decode(headers.get("Sec-WebSocket-Key"));
-        if len(decoded) != 16:
-            isB64 = None
-
-    if headers.get("Upgrade").lower() == "websocket" and \
-                    isB64 is not None and \
-                    headers.get("Sec-WebSocket-Version") == "13" and \
-                    headers.get("Host") is not None:
-        return True
-    return False
 
 
 def task_handle_get(connection, headers, head_request, server_env, query_params):
