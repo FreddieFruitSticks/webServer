@@ -1,4 +1,4 @@
-from Utils import message_len_as_hex, recvall_websocket
+from Utils import int_as_hex, recvall_websocket
 from NetworkExceptions import ConnectionAbruptlyClosedException
 
 
@@ -6,9 +6,9 @@ def send_close_frame(connection, reason):
     payload = []
     payload.insert(0, '\x81')
     message_length = 2
-    payload.insert(1, message_len_as_hex(message_length))
-    payload.insert(2, message_len_as_hex((reason >> 8) & 255))
-    payload.insert(3, message_len_as_hex(reason & 255))
+    payload.insert(1, int_as_hex(message_length))
+    payload.insert(2, int_as_hex((reason >> 8) & 255))
+    payload.insert(3, int_as_hex(reason & 255))
 
     map(lambda frame: connection.sendall(frame), payload)
 
@@ -20,23 +20,23 @@ def send_web_sock_message(connection, message):
     message_length = len(message)
 
     if len(message) <= 125:
-        payload.insert(1, message_len_as_hex(message_length))
+        payload.insert(1, int_as_hex(message_length))
         payload.insert(2, message)
     elif 125 < len(message) <= 65535:
-        payload.insert(1, message_len_as_hex(126))
-        payload.insert(2, message_len_as_hex((message_length >> 8) & 255))
-        payload.insert(3, message_len_as_hex(message_length & 255))
+        payload.insert(1, int_as_hex(126))
+        payload.insert(2, int_as_hex((message_length >> 8) & 255))
+        payload.insert(3, int_as_hex(message_length & 255))
         payload.insert(4, message)
     elif len(message) > 65535:
-        payload.insert(1, message_len_as_hex(127))
-        payload.insert(2, message_len_as_hex((message_length >> 56) & 255))
-        payload.insert(3, message_len_as_hex((message_length >> 48) & 255))
-        payload.insert(4, message_len_as_hex((message_length >> 40) & 255))
-        payload.insert(5, message_len_as_hex((message_length >> 32) & 255))
-        payload.insert(6, message_len_as_hex((message_length >> 24) & 255))
-        payload.insert(7, message_len_as_hex((message_length >> 16) & 255))
-        payload.insert(8, message_len_as_hex((message_length >> 8) & 255))
-        payload.insert(9, message_len_as_hex(message_length & 255))
+        payload.insert(1, int_as_hex(127))
+        payload.insert(2, int_as_hex((message_length >> 56) & 255))
+        payload.insert(3, int_as_hex((message_length >> 48) & 255))
+        payload.insert(4, int_as_hex((message_length >> 40) & 255))
+        payload.insert(5, int_as_hex((message_length >> 32) & 255))
+        payload.insert(6, int_as_hex((message_length >> 24) & 255))
+        payload.insert(7, int_as_hex((message_length >> 16) & 255))
+        payload.insert(8, int_as_hex((message_length >> 8) & 255))
+        payload.insert(9, int_as_hex(message_length & 255))
         payload.insert(10, message)
 
     map(lambda frame: connection.sendall(frame), payload)

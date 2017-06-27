@@ -1,5 +1,6 @@
-from Queue import Queue
 import threading
+
+from MessageBroker.Queue import Queue
 from ResponseBuilder import build_generic_response
 
 

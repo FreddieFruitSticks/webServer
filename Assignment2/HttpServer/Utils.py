@@ -2,12 +2,12 @@ from NetworkExceptions import ConnectionAbruptlyClosedException
 import re, base64
 
 
-def message_len_as_hex(message_length):
-    if message_length == 0 or message_length is None:
+def int_as_hex(integer):
+    if integer == 0 or integer is None:
         return "00".decode('hex')
     hex_map = {10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f'}
     hex_base = 16
-    quotient = message_length
+    quotient = integer
     my_list = []
 
     while quotient != 0:

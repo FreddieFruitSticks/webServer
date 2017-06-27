@@ -1,5 +1,14 @@
 import sys, re, hashlib, base64, binascii
+from MessageBroker import ConnectionMap
 
-m = re.compile("(a)n")
+my_map = ConnectionMap.ConnectionMap()
 
-print m.search("A chance of success grows with each day of hard work").group(1)
+my_map.put("192.168.0.1", "my_conn")
+my_map.put("192.168.0.2", "my_conn2")
+my_map.put("192.168.0.2", "my_conn3")
+my_map.print_bucket()
+print "-------------"
+# my_map.remove("192.168.0.2")
+my_map.print_bucket()
+
+print my_map.get("192.168.0.2").connection
