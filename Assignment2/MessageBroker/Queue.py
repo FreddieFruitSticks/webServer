@@ -1,12 +1,17 @@
-# Simple Queue object that I wanted to do myself for gees.
+import threading
+
+
 class Queue(object):
     head_node = None
     end_node = None
+
+    my_mutex = threading.Lock()
 
     def is_empty(self):
         return self.head_node is None and self.end_node is None
 
     def add(self, a_node_value):
+        self.my_mutex.acquire()
         node = self.Node(a_node_value)
 
         if not self.is_empty():
@@ -16,12 +21,16 @@ class Queue(object):
         else:
             self.head_node = node
             self.end_node = node
+        self.my_mutex.release()
 
     def pop(self):
+        self.my_mutex.acquire()
         if not self.is_empty():
             node = self._replace_out_end_node()
+            self.my_mutex.release()
             return node
         else:
+            self.my_mutex.release()
             return None
 
     def _replace_out_end_node(self):
