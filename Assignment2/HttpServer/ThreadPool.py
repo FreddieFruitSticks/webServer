@@ -1,13 +1,14 @@
-import threading
+import threading, sys
 
-from MessageBroker.Queue import Queue
+sys.path.insert(0, '/home/freddie/IdeaProjects/networking/Assignment2')
+from MessageBroker import Queue
 from ResponseBuilder import build_generic_response
 
 
 # TODO: This needs to be a proper threadpool.
 class ThreadPool(object):
     pool_size = 10
-    _thread_queue = Queue()
+    _thread_queue = Queue.Queue()
 
     def __init__(self, pool_size):
         self.pool_size = pool_size

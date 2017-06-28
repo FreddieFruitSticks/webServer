@@ -7,6 +7,9 @@ class ConnectionMap(object):
         for i in range(0, 255):
             self.hash_list.append(None)
 
+    def get_hash_list(self):
+        return self.hash_list
+
     def put(self, address, connection):
         if address and connection is None:
             raise Exception("address or connection is null in connectionMap put")

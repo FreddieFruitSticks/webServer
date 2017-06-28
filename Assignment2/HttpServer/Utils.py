@@ -56,10 +56,8 @@ def recvall_websocket(connection, buff_size):
     while len(data) < 2:
         recv = connection.recv(buff_size)
         if not recv: raise ConnectionAbruptlyClosedException
-        print [recv]
         data = data + recv
     payload_length = ord(data[1]) & 127
-    print "payload_length", payload_length
     if payload_length <= 125:
         starting_position = 2
         length = payload_length

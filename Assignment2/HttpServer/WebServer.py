@@ -1,4 +1,4 @@
-import socket, os
+import socket, os, threading
 from ThreadPool import ThreadPool
 from tasks import task_handle_get, task_handle_post_request, task_handle_put_request, task_handle_delete_request
 from HttpMessageVerifier import parse_headers
@@ -6,7 +6,7 @@ from NetworkExceptions import BadRequestException, HttpVersionException
 from ResponseBuilder import build_generic_response
 from EnvironmentHeaders import ServerEnvironmentVariables
 from Utils import recvall_http
-
+from MessageBroker import Broker
 
 HOST = ''
 PORT = 50008
@@ -18,7 +18,7 @@ sock.listen(1)
 
 
 # TODO: Think about putting this in the thread that it calls.
-def handle_request(message, conn, thread_pool, server_env):
+def handle_request(message, conn, thread_pool, server_env, broker):
     try:
         headers, query_params = parse_headers(message)
         request_operation = headers['request_operation']
@@ -31,7 +31,8 @@ def handle_request(message, conn, thread_pool, server_env):
                 'headers': headers,
                 'head_request': head_req,
                 'server_env': server_env,
-                'query_params': query_params
+                'query_params': query_params,
+                'broker': broker,
             })
         elif request_operation == 'POST':
             message_body = get_message_body(message)
@@ -74,7 +75,13 @@ def get_message_body(message):
 
 if __name__ == "__main__":
     thread_pool = ThreadPool(4)
-    thread_pool.start()
+    # thread_pool.start()
+
+    broker = Broker.Broker()
+    thread = threading.Thread(target=broker.listen_on_queue)
+    thread.daemon = True
+    thread.start()
+
     while True:
         conn, addr = sock.accept()
         try:
@@ -88,14 +95,8 @@ if __name__ == "__main__":
                                                          SERVER_SOFTWARE="0.0.1")
 
             full_message = recvall_http(conn, 2048)
-            # full_message = ''
-            # message = conn.recv(1024)
-            # while len(message) == 1024:
-            #     full_message += message
-            #     message = conn.recv(1024)
-            # full_message += message
             try:
-                handle_request(full_message, conn, thread_pool, server_env_vars)
+                handle_request(full_message, conn, thread_pool, server_env_vars, broker)
             except Exception as e:
                 response = build_generic_response(500, "Internal server error")
                 conn.send(response)

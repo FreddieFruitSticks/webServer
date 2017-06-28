@@ -1,4 +1,5 @@
 import threading
+import time
 
 
 class Queue(object):
@@ -12,8 +13,8 @@ class Queue(object):
 
     def add(self, a_node_value):
         self.my_mutex.acquire()
+        print "adding to the queue: ", a_node_value
         node = self.Node(a_node_value)
-
         if not self.is_empty():
             self.head_node.prev_node = node
             node.next_node = self.head_node
@@ -21,10 +22,12 @@ class Queue(object):
         else:
             self.head_node = node
             self.end_node = node
+        time.sleep(5)
         self.my_mutex.release()
 
     def pop(self):
         self.my_mutex.acquire()
+
         if not self.is_empty():
             node = self._replace_out_end_node()
             self.my_mutex.release()

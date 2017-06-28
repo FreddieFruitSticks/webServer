@@ -42,7 +42,7 @@ def send_web_sock_message(connection, message):
     map(lambda frame: connection.sendall(frame), payload)
 
 
-def recv_web_sock_message(connection):
+def recv_web_sock_message(connection, broker, address):
     closed = False
     try:
         while not closed:
@@ -63,15 +63,20 @@ def recv_web_sock_message(connection):
                     shutdown_reason = first_byte + second_byte
                     send_close_frame(connection, shutdown_reason)
                     connection.close()
+                    broker.remove_connection(address)
                 else:
                     message = [chr(ord(byte) ^ ord(mask[index % 4])) for index, byte in enumerate(masked_message)]
-                    print ''.join(message)
+                    # print ''.join(message)
+                    broker.add_message_to_queue(''.join(message))
+
             else:
                 print "connection closed on other side!"
                 shutdown_reason = 1000
                 send_close_frame(connection, shutdown_reason)
                 connection.close()
                 closed = True
+                broker.remove_connection(address)
+
     except ConnectionAbruptlyClosedException:
         print "Connection has abruptly closed while listening for message"
     except Exception:

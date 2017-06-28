@@ -22,7 +22,7 @@ def set_wsgi_env(headers, query_params, server_env):
     server_env.set_env_var('PATH_INFO', headers.get('file_name'))
 
 
-def task_handle_get(connection, headers, head_request, server_env, query_params):
+def task_handle_get(connection, headers, head_request, server_env, query_params, broker=None):
     set_wsgi_env(headers, query_params, server_env)
     if headers.get("Connection") == "Upgrade":
         if verify_websocket_handshake(headers):
@@ -39,7 +39,8 @@ def task_handle_get(connection, headers, head_request, server_env, query_params)
                 .with_body({"body": ""}) \
                 .build_response()
             connection.sendall(response)
-            recv_web_sock_message(connection)
+            broker.add_connection(server_env.get_env_vars().get('REMOTE_ADDR'), connection)
+            recv_web_sock_message(connection, broker, server_env.get_env_vars().get('REMOTE_ADDR'))
         else:
             connection.sendall(build_generic_response(400, "Bad Request"))
             connection.close()
