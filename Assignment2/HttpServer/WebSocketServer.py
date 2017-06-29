@@ -1,5 +1,6 @@
 from Utils import int_as_hex, recvall_websocket
 from NetworkExceptions import ConnectionAbruptlyClosedException
+import time
 
 
 def send_close_frame(connection, reason):
@@ -79,6 +80,8 @@ def recv_web_sock_message(connection, broker, address):
 
     except ConnectionAbruptlyClosedException:
         print "Connection has abruptly closed while listening for message"
+        connection.close()
+        broker.remove_connection(address)
     except Exception:
         print "Exception in recv web sock message"
         raise

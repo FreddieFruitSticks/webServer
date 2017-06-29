@@ -7,6 +7,7 @@ from ResponseBuilder import build_generic_response
 from EnvironmentHeaders import ServerEnvironmentVariables
 from Utils import recvall_http
 from MessageBroker import Broker
+from WebSocketServer import send_web_sock_message
 
 HOST = ''
 PORT = 50008
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     thread_pool = ThreadPool(4)
     # thread_pool.start()
 
-    broker = Broker.Broker()
+    broker = Broker.Broker(send_web_sock_message)
     thread = threading.Thread(target=broker.listen_on_queue)
     thread.daemon = True
     thread.start()

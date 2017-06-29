@@ -54,10 +54,10 @@ class ConnectionMap(object):
             if conn_node.next_node is not None:
                 conn_node.next_node.previous_node = conn_node.previous_node
 
-    def print_bucket(self):
+    def traverse(self, function):
         for conn_node in self.hash_list:
             while conn_node is not None:
-                print conn_node.key
+                function(conn_node.connection)
                 conn_node = conn_node.next_node
 
     def get_hash(self, key):
