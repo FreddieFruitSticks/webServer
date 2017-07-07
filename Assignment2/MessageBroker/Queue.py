@@ -22,7 +22,7 @@ class Queue(object):
         else:
             self.head_node = node
             self.end_node = node
-        time.sleep(5)
+        time.sleep(0.5)
         self.my_mutex.release()
 
     def pop(self):

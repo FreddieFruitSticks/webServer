@@ -46,8 +46,8 @@ def task_handle_get(connection, headers, head_request, server_env, query_params,
             connection.close()
     else:
         try:
-            wsgi_get(connection, headers, head_request, server_env)
-            # do_something_get(connection, headers, head_request)
+            # wsgi_get(connection, headers, head_request, server_env)
+            do_something_get(connection, headers, head_request)
         except KeyError as e:
             print e
 

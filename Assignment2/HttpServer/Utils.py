@@ -48,7 +48,7 @@ def verify_websocket_handshake(headers):
     return False
 
 
-# starting position is the beginning of the mask which is 4 bytes, rest is payload - is this method doing to much?
+# starting position is the beginning of the mask which is 4 bytes, rest is payload - is this method doing too much?
 def recvall_websocket(connection, buff_size):
     data = ''
     length = 0

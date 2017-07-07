@@ -86,16 +86,22 @@ if __name__ == "__main__":
     while True:
         conn, addr = sock.accept()
         try:
+            try:
+                addr_ = socket.gethostbyaddr(addr[0])[0]
+            except Exception as e:
+                addr_="Nothing"
+                print "no address", e
 
             server_env_vars = ServerEnvironmentVariables(HTTP_HOST='FredsServer',
                                                          DOCUMENT_ROOT=os.getcwd(),
                                                          REMOTE_ADDR=addr[0],
-                                                         REMOTE_HOST=socket.gethostbyaddr(addr[0])[0],
+                                                         REMOTE_HOST=addr_,
                                                          SERVER_PORT=PORT,
                                                          SERVER_PROTOCOL="Http/1.1",
                                                          SERVER_SOFTWARE="0.0.1")
 
             full_message = recvall_http(conn, 2048)
+            print full_message
             try:
                 handle_request(full_message, conn, thread_pool, server_env_vars, broker)
             except Exception as e:

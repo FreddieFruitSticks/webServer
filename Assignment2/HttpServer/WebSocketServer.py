@@ -20,15 +20,15 @@ def send_web_sock_message(connection, message):
     payload.insert(0, '\x81')  # 1000 0001 -> first 1 for FIN, 3 0's for RSV's and 0001 (0x01) for text
     message_length = len(message)
 
-    if len(message) <= 125:
+    if message_length <= 125:
         payload.insert(1, int_as_hex(message_length))
         payload.insert(2, message)
-    elif 125 < len(message) <= 65535:
+    elif 125 < message_length <= 65535:
         payload.insert(1, int_as_hex(126))
         payload.insert(2, int_as_hex((message_length >> 8) & 255))
         payload.insert(3, int_as_hex(message_length & 255))
         payload.insert(4, message)
-    elif len(message) > 65535:
+    elif message_length > 65535:
         payload.insert(1, int_as_hex(127))
         payload.insert(2, int_as_hex((message_length >> 56) & 255))
         payload.insert(3, int_as_hex((message_length >> 48) & 255))
@@ -59,10 +59,13 @@ def recv_web_sock_message(connection, broker, address):
                     closed = True
                     message = [ord(byte) ^ ord(mask[index % 4]) for index, byte in
                                enumerate(masked_message)]
-                    first_byte = message[0] << 8
-                    second_byte = message[1]
-                    shutdown_reason = first_byte + second_byte
-                    send_close_frame(connection, shutdown_reason)
+                    if len(message) > 0:
+                        first_byte = message[0] << 8
+                        second_byte = message[1]
+                        shutdown_reason = first_byte + second_byte
+                        send_close_frame(connection, shutdown_reason)
+                    else:
+                        send_close_frame(connection, 1000)
                     connection.close()
                     broker.remove_connection(address)
                 else:

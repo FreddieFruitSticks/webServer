@@ -23,9 +23,10 @@ def do_something_delete(headers):
 
 def do_something_get(connection, headers, head_request):
     try:
-        file_path = os.getcwd() + "/../text_files" + headers.get('file_name')
+        file_path = os.getcwd() + "/../../../chat2/" + headers['file_name']
         permissions = os.stat(file_path)
         permission = int(oct(permissions.st_mode)[-1:])
+
         if permission | 4 != permission:
             response = build_generic_response(403, "Forbidden")
             connection.send(response)
@@ -48,11 +49,15 @@ def do_something_get(connection, headers, head_request):
             connection.send(response)
             while body and not head_request:
                 body = my_file.read(1024)
-                connection.send(body)
+                connection.sendall(body)
             my_file.close()
-    except IOError and OSError:
+    except IOError:
         response = get_404_response()
         connection.send(response)
+    except OSError:
+        response = get_404_response()
+        connection.send(response)
+
     finally:
         connection.close()
 
